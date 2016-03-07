@@ -1,0 +1,14 @@
+grafana-data:
+  image: busybox:latest
+  volumes:
+    - /tmp/grafana
+  command: /bin/echo
+
+logging:
+  build: .
+  ports:
+    - "80:80"
+    - "2003:2003"
+    - "8125:8125/udp"
+    - "8126:8126"
+  restart: always
