@@ -19,10 +19,23 @@ ENV MYSQL_USER=mysql \
 RUN apt-get -y -q install mysql-server
 RUN rm -rf ${MYSQL_DATA_DIR}
 
+# PHP
+RUN apt-get -y -q install php5-cli php5-fpm php5-mysql
+
+
+
 # CONFIGURATIONS
 
 # Mysql
 VOLUME ["${MYSQL_DATA_DIR}", "${MYSQL_RUN_DIR}"]
+
+# PHP
+RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
+RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
+
+# Loganalyzer
+RUN mkdir -p /var/www
+ADD ./loganalyzer-3.6.6/src/* /var/www/
 
 # Rsyslog
 ADD ./rsyslog/hostslogs.conf /etc/rsyslog.d/
@@ -71,6 +84,9 @@ EXPOSE  514/udp
 
 # Grafana
 EXPOSE  80
+
+# Loganalyzer
+EXPOSE  82
 
 # Graphite
 EXPOSE 2003

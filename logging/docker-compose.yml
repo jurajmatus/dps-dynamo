@@ -1,13 +1,16 @@
 grafana-data:
   image: busybox:latest
   volumes:
-    - /tmp/grafana
+    - /tmp/logging
   command: /bin/echo
 
 logging:
   build: .
+  volumes_from:
+   - grafana-data
   ports:
     - "80:80"
+    - "82:82"
     - "2003:2003"
     - "8125:8125/udp"
     - "8126:8126"
