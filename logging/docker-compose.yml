@@ -2,6 +2,7 @@ grafana-data:
   image: busybox:latest
   volumes:
     - /tmp/logging
+    - /tmp/mysql:/var/lib/mysql
   command: /bin/echo
 
 logging:
