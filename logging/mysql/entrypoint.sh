@@ -10,18 +10,6 @@ pid="$!"
 
 mysql=( mysql --protocol=socket -uroot )
 
-for i in {30..0}; do
-   if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
-      break
-   fi
-   echo 'MySQL init process in progress...'
-   sleep 1
-done
-if [ "$i" = 0 ]; then
-   echo >&2 'MySQL init process failed.'
-   exit 1
-fi
-
 mysql_tzinfo_to_sql /usr/share/zoneinfo | "${mysql[@]}" mysql
 
 "${mysql[@]}" <<-EOSQL
@@ -52,13 +40,10 @@ if [ "$MYSQL_USER" -a "$MYSQL_PASSWORD" ]; then
    echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 fi
 
-if ! kill -s TERM "$pid" || ! wait "$pid"; then
-   echo >&2 'MySQL init process failed.'
-   exit 1
-fi
-
 echo
 echo 'MySQL init process done. Ready for start up.'
 echo
 
-mysqld
+chown -R mysql:mysql "$MYSQL_DATA_DIR"
+
+mysqld > /dev/null 2>&1 & disown

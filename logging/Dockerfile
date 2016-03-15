@@ -10,36 +10,12 @@ RUN apt-get update
 RUN add-apt-repository ppa:adiscon/v8-stable
 RUN apt-get -y -q install rsyslog
 
-# Mysql
-ENV MYSQL_ROOT_PASSWORD=mysql-password
-ENV MYSQL_DATABASE=db
-ENV MYSQL_USER=mysql
-ENV MYSQL_PASSWORD=mysql-password
-ENV MYSQL_DATA_DIR=/var/lib/mysql
-
-RUN apt-get -y -q install mysql-server
-RUN rm -rf ${MYSQL_DATA_DIR}
-
-# PHP
-RUN apt-get -y -q install php5-cli php5-fpm php5-mysql
+# PHP, Apache
+RUN apt-get -y -q install apache2 libapache2-mod-php5 php5-mysql
 
 
 
 # CONFIGURATIONS
-
-# Mysql
-ADD ./mysql/entrypoint.sh /usr/bin/mysql-entrypoint.sh
-RUN chmod +x /usr/bin/mysql-entrypoint.sh
-RUN RUN mkdir /docker-entrypoint-initdb.d
-VOLUME ["${MYSQL_DATA_DIR}"]
-
-# PHP
-RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
-RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
-
-# Loganalyzer
-RUN mkdir -p /var/www
-ADD ./loganalyzer-3.6.6/src/* /var/www/
 
 # Rsyslog
 ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
@@ -66,6 +42,18 @@ python manage.py syncdb --noinput
 # Grafana
 ADD ./grafana/custom.ini /opt/grafana/conf/custom.ini
 
+# Apache
+ADD ./apache/start.sh /usr/bin/start-apache.sh
+RUN chmod +x /usr/bin/start-apache.sh
+ADD ./apache/ports.conf /etc/apache2/ports.conf
+ADD ./apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+RUN usermod -a -G adm www-data
+
+# Loganalyzer
+RUN rm -rf /var/www & mkdir -p /var/www
+ADD ./loganalyzer-3.6.6/src /var/www/
+RUN chmod 666 /var/www/config.php
+
 # Nginx and supervisord
 ADD ./nginx/nginx.conf /etc/nginx/nginx.conf
 ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -78,11 +66,8 @@ ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 514/tcp
 EXPOSE 514/udp
 
-# Grafana
+# Http frontends (Grafana, Loganalyzer)
 EXPOSE 80
-
-# Loganalyzer
-EXPOSE 82
 
 # Graphite
 EXPOSE 2003
