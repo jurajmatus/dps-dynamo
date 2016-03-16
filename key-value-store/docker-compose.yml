@@ -1,0 +1,11 @@
+key-value-store:
+  build: .
+  container_name: dynamo
+  external_links:
+   - logging
+  environment:
+    GRAPHITE_HOST: 'http://localhost'
+    COLLECTD_HOST: 'http://localhost'
+  ports:
+    - "80:80"
+  restart: always
