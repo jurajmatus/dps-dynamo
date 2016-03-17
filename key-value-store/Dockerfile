@@ -1,9 +1,21 @@
 FROM debian:jessie
 
 # Supervisor
-RUN apt-get update && apt-get install -y supervisor
+RUN apt-get update && apt-get install -y supervisor curl
 RUN mkdir -p /var/log/supervisor
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Rsyslog
+ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
+ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
+RUN apt-get install -y rsyslog
+
+# Statsd
+ADD ./statsd/src /src/statsd/
+ADD ./statsd/config.js /src/statsd/config.js
+ADD ./statsd/init-statsd.sh /usr/bin/init-statsd.sh
+RUN curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
+    apt-get install -y nodejs
 
 # Collectd
 RUN echo "APT::Install-Recommends false;" >> /etc/apt/apt.conf.d/recommends.conf && \
@@ -13,7 +25,6 @@ RUN echo "APT::Install-Recommends false;" >> /etc/apt/apt.conf.d/recommends.conf
     apt-get upgrade -y && \
     apt-get install -y collectd python-pip ca-certificates && \
     pip install envtpl && \
-    apt-get install -y curl && \
     curl -sL https://github.com/tianon/gosu/releases/download/1.4/gosu-amd64 > /usr/bin/gosu && \
     chmod +x /usr/bin/gosu && \
     apt-get remove -y curl && \
@@ -34,8 +45,8 @@ RUN apt-get install -y golang-go git && \
     
     
 # Java
-RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list && \
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
+    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list && \
     echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 && \
     apt-get update && \

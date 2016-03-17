@@ -2,16 +2,12 @@ FROM jlachowski/grafana-graphite-statsd
 
 
 
-# INSTALLS
+# INSTALLS: Rsyslog, PHP, Apache
 
-RUN apt-get update
-
-# Rsyslog
-RUN add-apt-repository ppa:adiscon/v8-stable
-RUN apt-get -y -q install rsyslog
-
-# PHP, Apache
-RUN apt-get -y -q install apache2 libapache2-mod-php5 php5-mysql
+RUN apt-get update && \
+    add-apt-repository ppa:adiscon/v8-stable && \
+    apt-get -y -q install rsyslog && \
+    apt-get -y -q install apache2 libapache2-mod-php5 php5-mysql
 
 
 
@@ -44,10 +40,9 @@ ADD ./grafana/custom.ini /opt/grafana/conf/custom.ini
 
 # Apache
 ADD ./apache/start.sh /usr/bin/start-apache.sh
-RUN chmod +x /usr/bin/start-apache.sh
+RUN usermod -a -G adm www-data
 ADD ./apache/ports.conf /etc/apache2/ports.conf
 ADD ./apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-RUN usermod -a -G adm www-data
 
 # Loganalyzer
 RUN rm -rf /var/www & mkdir -p /var/www
