@@ -6,9 +6,9 @@ RUN mkdir -p /var/log/supervisor
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Rsyslog
+RUN apt-get install -y rsyslog
 ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
 ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
-RUN apt-get install -y rsyslog
 
 # Statsd
 ADD ./statsd/src /src/statsd/
