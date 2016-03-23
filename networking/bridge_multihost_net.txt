@@ -1,0 +1,53 @@
+1. create 2 Virtual machines - Node1 and Node2 (eg. Centos7):
+...
+
+2. install net utils:
+$ yum install bridge-utils iproute tcpdump iptables iptables-services
+
+3. install docker
+$ curl -fsSL https://get.docker.com/ | sh
+
+4. configure host:
+#create vm_ext bridge and attach 2 VMs to it (virsh, virsh manager...)
+$ brctl addbr vm_ext
+$ ip l set vm_ext up
+#add interface to outside networks to vm_ext bridge 
+$ brctl addif vm_ext <interface>
+#add ip from that interface to vm_ext bridge 
+$ ip del/add ... / dhclient
+#add static routes to new docker networks
+$ ip r add 192.168.101.0/24 dev vm_ext
+$ ip r add 192.168.102.0/24 dev vm_ext
+
+
+# /etc/sysconfig/docker-network
+DOCKER_NETWORK_OPTIONS=
+
+5.On NODE1:
+# execute docker daemon with network options
+# /etc/sysconfig/docker-network
+DOCKER_NETWORK_OPTIONS='--bip=192.168.101.1/24 --fixed-cidr=192.168.101.0/24'
+$ sed -i 's/DOCKER_NETWORK_OPTIONS=.*/DOCKER_NETWORK_OPTIONS=\x27--bip=192.168.101.1\/24 --fixed-cidr=192.168.101.0\/24\x27/g' /etc/sysconfig/docker-network
+
+$ echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
+$ ip l del docker0
+$ service docker restart
+$ docker run -d -it centos:latest bash
+$ ip r add 192.168.102.0/24 dev eth0
+$ service iptables stop
+
+6. On NODE2:
+# execute docker daemon with network options
+# /etc/sysconfig/docker-network
+DOCKER_NETWORK_OPTIONS='--bip=192.168.102.1/24 --fixed-cidr=192.168.102.0/24'
+$ sed -i 's/DOCKER_NETWORK_OPTIONS=.*/DOCKER_NETWORK_OPTIONS=\x27--bip=192.168.102.1\/24 --fixed-cidr=192.168.102.0\/24\x27/g' /etc/sysconfig/docker-network
+
+$ echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
+$ ip l del docker0
+$ service docker restart
+$ docker run -d -it centos:latest bash
+$ ip r add 192.168.101.0/24 dev eth0
+$ service iptables stop
+
+7. Check connectivity
+NODE1/2: docker attach ...; ping 192.168.101.2/192.168.102.2 

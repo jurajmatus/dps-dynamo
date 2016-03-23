@@ -1,0 +1,55 @@
+1. create 2 Virtual machines - Node1 and Node2 (eg. Centos7):
+...
+
+2. install net utils for additional debug:
+$ yum install bridge-utils iproute tcpdump iptables iptables-services
+
+3. install docker and consul
+$ curl -fsSL https://get.docker.com/ | sh
+$ curl https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip > consul.zip; unzip consul.zip
+$ cp consul /usr/bin
+
+4. Run consul on Node1:
+#set Node1 ip address to 10.0.0.1/24
+[Node1]$ export HostIP1=10.0.0.1
+[Node1]$ export HostIP2=10.0.0.6
+$ consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul \
+   -node=agent-one -bind=$HostIP1 -client $HostIP1 \
+   -config-dir /etc/consul.d &
+    
+5. Run consul on Node2:
+#set Node2 ip address to 10.0.0.6/24
+[Node2]$ export HostIP1=10.0.0.1
+[Node2]$ export HostIP2=10.0.0.6
+$ consul agent -data-dir /tmp/consul -node=agent-two \
+    -bind=$HostIP2 -config-dir /etc/consul.d -client $HostIP2 &
+    
+6. Join one agent to another
+[Node1]$ consul join --rpc-addr=$HostIP1:8400 $HostIP2
+[Node2]$ consul join --rpc-addr=$HostIP2:8400 $HostIP1
+
+7. Check SD
+$ consul members -rpc-addr=$HostIP2:8400
+$ consul members -rpc-addr=$HostIP1:8400
+$ curl $HostIP1:8500/v1/catalog/nodes
+$ curl $HostIP2:8500/v1/catalog/nodes
+
+8. Run docker daemon with cluster-store and cluster-advertise options on both Nodes
+[Node1]$ docker daemon --log-driver=journald -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --cluster-store=consul://$HostIP1:8500 --cluster-advertise=eth0:2375 &
+[Node2]$ docker daemon --log-driver=journald -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --cluster-store=consul://$HostIP2:8500 --cluster-advertise=eth0:2375 &
+
+9. Create overlay network on 1 node eg. Node1
+[Node1]$ docker network create -d overlay dynamo-net --subnet=10.0.10.0/24 
+[Node1]$ docker run -itd --net=dynamo-net centos:latest bash
+[Node2]$ docker run -itd --net=dynamo-net centos:latest bash
+
+10. Check connectivity to other container and access to consul
+[Node1] docker attach ...
+[container1]$ ping 10.0.10.?
+[container1]$ curl $HostIP1:8500/v1/catalog/nodes
+[container1]$ curl $HostIP2:8500/v1/catalog/nodes
+
+[Node2] docker attach ...
+[container2]$ ping 10.0.10.?
+[container2]$ curl $HostIP1:8500/v1/catalog/nodes
+[container2]$ curl $HostIP2:8500/v1/catalog/nodes
