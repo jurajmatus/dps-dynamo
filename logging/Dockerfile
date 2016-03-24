@@ -68,10 +68,10 @@ EXPOSE 80
 EXPOSE 2003
 
 # StatsD UDP port
-EXPOSE 8125/udp
+# EXPOSE 8125/udp
 
 # StatsD Management port
-EXPOSE 8126
+# EXPOSE 8126
 
 
 

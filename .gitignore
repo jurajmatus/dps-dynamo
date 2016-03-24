@@ -13,3 +13,6 @@ hs_err_pid*
 
 *.settings
 target
+*.jar
+
+dependency-reduced-pom.xml

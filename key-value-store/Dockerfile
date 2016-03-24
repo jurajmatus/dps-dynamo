@@ -1,48 +1,9 @@
 FROM debian:jessie
 
-# Supervisor
-RUN apt-get update && apt-get install -y supervisor curl
-RUN mkdir -p /var/log/supervisor
-COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 # Rsyslog
-RUN apt-get install -y rsyslog
+RUN apt-get update && apt-get install -y rsyslog
 ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
 ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
-
-# Statsd
-ADD ./statsd/src /src/statsd/
-ADD ./statsd/config.js /src/statsd/config.js
-ADD ./statsd/init-statsd.sh /usr/bin/init-statsd.sh
-RUN curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
-    apt-get install -y nodejs
-
-# Collectd
-RUN echo "APT::Install-Recommends false;" >> /etc/apt/apt.conf.d/recommends.conf && \
-    echo "APT::AutoRemove::RecommendsImportant false;" >> /etc/apt/apt.conf.d/recommends.conf && \
-    echo "APT::AutoRemove::SuggestsImportant false;" >> /etc/apt/apt.conf.d/recommends.conf && \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y collectd python-pip ca-certificates && \
-    pip install envtpl && \
-    curl -sL https://github.com/tianon/gosu/releases/download/1.4/gosu-amd64 > /usr/bin/gosu && \
-    chmod +x /usr/bin/gosu && \
-    apt-get remove -y curl && \
-    apt-get autoremove -y
-
-COPY ./collector/docker/collectd.conf.tpl /etc/collectd/collectd.conf.tpl
-COPY ./collector/docker/run.sh /usr/bin/run-collectd.sh
-
-COPY ./collector /go/src/github.com/bobrik/collectd-docker/collector
-
-RUN apt-get install -y golang-go git && \
-    GOPATH=/go go get github.com/bobrik/collectd-docker/collector/... && \
-    apt-get remove -y golang-go git && \
-    apt-get autoremove -y && \
-    mv /go/bin/collector /collector && \
-    rm -rf /go && \
-    chmod 6755 /collector
-    
     
 # Java
 RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
@@ -51,8 +12,20 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 && \
     apt-get update && \
     apt-get install -y oracle-java8-installer oracle-java8-set-default
-    
-    
 
+# Supervisor
+RUN apt-get install -y supervisor curl
+RUN mkdir -p /var/log/supervisor
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+    
+# Dropwizard
+ADD ./dropwizard/app.jar /usr/bin/app.jar
+ADD ./dropwizard/conf.yaml /etc/conf.yaml
+ADD ./dropwizard/run.sh /usr/bin/app.sh
+
+# PORTS
+
+# Dropwizard
+EXPOSE 8080
     
 ENTRYPOINT ["/usr/bin/supervisord"]

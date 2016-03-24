@@ -5,4 +5,6 @@ key-value-store:
     GRAPHITE_HOST: 'localhost'
     COLLECTD_HOST: 'localhost'
     RSYSLOG_HOST: 'localhost'
+  ports:
+    - "8080:8080"
   restart: always
