@@ -1,0 +1,13 @@
+consul_server:
+  build: "."
+  #image: "voxxit/consul"
+  volumes:
+    - "/var/log/consul"
+    - "/etc/consul.d"
+  net: "host"
+  command: ["agent", "-server", "-bootstrap", "-node=${HOSTNAME}-consul-server", "-config-dir=/etc/consul.d", "-ui-dir=/ui", "-data-dir=/data", "-advertise=${HOST_IP}", "-client=${HOST_IP}", "-join=${NODE1_IP}", "-join=${NODE2_IP}"]
+
+#network_mode: "host"
+#entrypoint: 
+#expose: 
+#logging: 
