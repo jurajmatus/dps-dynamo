@@ -1,0 +1,32 @@
+server:
+  type: default
+  maxThreads: 1024
+  applicationConnectors:
+    - type: http
+      port: 8080
+  requestLog:
+    timeZone: UTC
+    appenders:
+      - type: console
+        target: stdout
+logging:
+  level: INFO
+  loggers:
+    "io.dropwizard": INFO
+  appenders:
+    - type: console
+    - type: syslog
+      host: localhost
+      port: 514
+      facility: local0
+      threshold: ALL
+      stackTracePrefix: \t
+metrics:
+  reporters:
+    - type: graphite
+      durationUnit: milliseconds
+      rateUnit: seconds
+      useRegexFilters: false
+      frequency: 1 minute
+      host: localhost
+      port: 2003
