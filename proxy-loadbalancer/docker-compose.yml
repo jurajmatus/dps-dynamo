@@ -1,0 +1,16 @@
+shopdata:
+  image: dprs/proxy
+
+shopservice:
+  image: dprs/proxy
+  environment:
+    - SERVICE_NAME=proxy
+    - SERVICE_TAGS=dprs
+
+router:
+  image: seges/nginx-consul:1.9.0
+  volumes_from:
+    - proxy
+  ports:
+    - 80:80
+    - 443:443
