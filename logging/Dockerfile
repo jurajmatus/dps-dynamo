@@ -37,6 +37,7 @@ python manage.py syncdb --noinput
 
 # Grafana
 ADD ./grafana/custom.ini /opt/grafana/conf/custom.ini
+ADD ./grafana/grafana.db /opt/grafana/data/grafana.db
 
 # Apache
 ADD ./apache/start.sh /usr/bin/start-apache.sh

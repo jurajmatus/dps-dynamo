@@ -1,4 +1,0 @@
-Check incoming communication
-* rsyslog (file, loganalyzer)
-* graphite (grafana)
-Add Grafana dashboards (+ save and dockerize)
