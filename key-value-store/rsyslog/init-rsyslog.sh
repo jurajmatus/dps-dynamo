@@ -1,8 +1,9 @@
 #!/bin/bash
 RSYSLOG_HOST="$RSYSLOG_HOST"
-if [ -n "$RSYSLOG_HOST" ] ; then
-   RSYSLOG_HOST="http://localhost"
+if [ -z "$RSYSLOG_HOST" ] ; then
+   RSYSLOG_HOST="localhost"
 fi
-sed -i -e 's/__HOST__/'$RSYSLOG_HOST'/g' /etc/rsyslog.conf
+
+echo "*.* @$RSYSLOG_HOST:514" >> /etc/rsyslog.conf
 
 /usr/sbin/rsyslogd -n
