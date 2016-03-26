@@ -3,8 +3,9 @@ key-value-store:
   container_name: dynamo
   environment:
     GRAPHITE_HOST: 'localhost'
-    COLLECTD_HOST: 'localhost'
     RSYSLOG_HOST: 'localhost'
+  external_links:
+    - logging
   ports:
     - "8080:8080"
   #Consul ports

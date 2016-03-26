@@ -1,9 +1,4 @@
 FROM debian:jessie
-
-# Rsyslog
-RUN apt-get update && apt-get install -y rsyslog
-ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
-ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
     
 # Java
 RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
@@ -12,6 +7,13 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 && \
     apt-get update && \
     apt-get install -y oracle-java8-installer oracle-java8-set-default
+
+# Installations
+RUN apt-get update && apt-get install -y rsyslog supervisor curl
+
+# Rsyslog
+ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
+ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
     
 # Dropwizard
 ADD ./dropwizard/app.jar /usr/bin/app.jar
