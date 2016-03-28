@@ -9,7 +9,7 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     apt-get install -y oracle-java8-installer oracle-java8-set-default
 
 # Installations
-RUN apt-get update && apt-get install -y rsyslog supervisor curl
+RUN apt-get update && apt-get install -y rsyslog python python3.4 curl vim
 
 # Rsyslog
 ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
@@ -38,11 +38,6 @@ EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8600 8600/udp
 ENV NODE1_IP=10.0.0.1
 ENV NODE2_IP=10.0.0.6
 
-# Supervisor
-#RUN apt-get install -y supervisor curl
-#COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-RUN apt-get install -y python python3.4 curl vim
 COPY ./pip/get-pip.py /tmp/get-pip.py
 RUN python /tmp/get-pip.py
 RUN mkdir -p /var/log/supervisor
