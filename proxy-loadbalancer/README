@@ -1,0 +1,8 @@
+#USAGE
+./consul-template -consul <IP address of consul> -template '<PATH_TO_TEMPLATE>:<OUTPUT_PATH>(:<COMMAND>)'
+
+##
+#EXAMPLE
+#Generates HAProxy configuration from dynamo.ctmpl file where it substitutes IP addresses of service nodes
+##
+./consul-template -once -consul 10.0.0.1:8500 -template "/root/dps-dynamo/key-value-store/consul-templates/dynamo.ctmpl:/tmp/haproxy_dynamo_tmpl.conf:service haproxy restart"

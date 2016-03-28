@@ -1,14 +1,11 @@
 FROM jlachowski/grafana-graphite-statsd
 
-
-
 # INSTALLS: Rsyslog, PHP, Apache
 
 RUN apt-get update && \
     add-apt-repository ppa:adiscon/v8-stable && \
     apt-get -y -q install rsyslog && \
     apt-get -y -q install apache2 libapache2-mod-php5 php5-mysql
-
 
 
 # CONFIGURATIONS

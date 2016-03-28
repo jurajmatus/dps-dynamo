@@ -12,6 +12,8 @@ import io.dropwizard.setup.Environment;
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.SampleResource;
+import sk.fiit.dps.team11.resources.CheckConnectivityResource;
+
 
 public class KeyValueStoreService extends Application<TopConfiguration> {
 
@@ -28,7 +30,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 	@Override
 	public void run(final TopConfiguration configuration, Environment environment) {
 
-		environment.healthChecks().register("empty", new HealthCheck() {
+		environment.healthChecks().register("base-app", new HealthCheck() {
 			@Override
 			protected Result check() throws Exception {
 				return Result.healthy();
@@ -48,6 +50,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 
 		// Resources
 		environment.jersey().register(SampleResource.class);
+		environment.jersey().register(CheckConnectivityResource.class);
 
 	}
 

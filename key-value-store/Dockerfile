@@ -12,20 +12,37 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 && \
     apt-get update && \
     apt-get install -y oracle-java8-installer oracle-java8-set-default
+    
+# Consul agent
+ADD ./consul/consul /usr/bin/
+RUN mkdir -p /tmp/consul
+RUN mkdir -p /etc/consul.d
+ADD ./consul/config.json /etc/consul.d/
+ADD ./consul-services/dps-dynamo.json /etc/consul.d/
+
+# Environment variables for IP setting
+ENV NODE1_IP=10.0.0.8
+ENV NODE2_IP=10.0.0.6
 
 # Supervisor
-RUN apt-get install -y supervisor curl
+RUN apt-get install -y python python3.4 curl vim
+COPY ./pip/get-pip.py /tmp/get-pip.py
+RUN python /tmp/get-pip.py
 RUN mkdir -p /var/log/supervisor
-COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-    
+RUN pip install supervisor 
+COPY ./supervisord.conf /etc/supervisord.conf
+
 # Dropwizard
 ADD ./dropwizard/app.jar /usr/bin/app.jar
 ADD ./dropwizard/conf.yaml /etc/conf.yaml
 ADD ./dropwizard/run.sh /usr/bin/app.sh
 
 # PORTS
-
 # Dropwizard
-EXPOSE 8080
-    
-ENTRYPOINT ["/usr/bin/supervisord"]
+#EXPOSE 8080
+
+# Consul ports
+#EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8600 8600/udp
+
+ENTRYPOINT ["/usr/local/bin/supervisord"]
+

@@ -1,0 +1,20 @@
+key-value-store:
+  build: .
+  container_name: dynamo
+  environment:
+    GRAPHITE_HOST: 'localhost'
+    COLLECTD_HOST: 'localhost'
+    RSYSLOG_HOST: 'localhost'
+  #ports:
+    #- "8080:8080"
+  #Consul ports
+    #- "8300"
+    #- "8301"
+    #- "8302"
+    #- "8400"
+    #- "8500"
+    #- "8600"
+  #Dynamo ports
+    #- "5550"
+  restart: always
+  net: dynamo-net

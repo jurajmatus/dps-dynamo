@@ -1,4 +1,4 @@
-export NODE1_IP=10.0.0.1
+export NODE1_IP=10.0.0.8
 export NODE2_IP=10.0.0.6
 
 export INTERFACE="eth0"

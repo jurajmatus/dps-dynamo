@@ -1,0 +1,7 @@
+haproxy-consul-template:
+  build: .
+  container_name: haproxy
+  ports:
+    - "8080:8080"
+  #net: "host"
+  restart: always
