@@ -1,21 +1,9 @@
-grafana-data:
-  image: busybox:latest
-  volumes:
-    - /tmp/logging
-    - /tmp/mysql:/var/lib/mysql
-  command: /bin/echo
-
 logging:
   build: .
   container_name: logging
-  volumes_from:
-   - grafana-data
   ports:
     - "80:80"
-    - "82:82"
     - "2003:2003"
-    - "8125:8125/udp"
-    - "8126:8126"
     - "514:514"
     - "514:514/udp"
   restart: always

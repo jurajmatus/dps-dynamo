@@ -10,5 +10,5 @@ VOLUME /var/log/consul /etc/consul.d/
 #Entrypoint is defined in image
 #ENTRYPOINT [ "/bin/consul" ]
 
-#CMD ["agent" "-server", "-config-dir=/etc/consul.d", "-ui-dir=/ui"]
+#CMD ["agent", "-bootstrap", "-server", "-config-dir=/etc/consul.d", "-ui-dir=/ui"]
 

@@ -34,6 +34,7 @@ python manage.py syncdb --noinput
 
 # Grafana
 ADD ./grafana/custom.ini /opt/grafana/conf/custom.ini
+ADD ./grafana/grafana.db /opt/grafana/data/grafana.db
 
 # Apache
 ADD ./apache/start.sh /usr/bin/start-apache.sh
@@ -61,14 +62,8 @@ EXPOSE 514/udp
 # Http frontends (Grafana, Loganalyzer)
 EXPOSE 80
 
-# Graphite
+# Graphite listener
 EXPOSE 2003
-
-# StatsD UDP port
-# EXPOSE 8125/udp
-
-# StatsD Management port
-# EXPOSE 8126
 
 
 

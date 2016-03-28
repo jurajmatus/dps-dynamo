@@ -27,6 +27,6 @@ metrics:
       durationUnit: milliseconds
       rateUnit: seconds
       useRegexFilters: false
-      frequency: 1 minute
-      host: localhost
+      frequency: 5 seconds
+      host: logging
       port: 2003
