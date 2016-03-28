@@ -65,14 +65,8 @@ EXPOSE 514/udp
 # Http frontends (Grafana, Loganalyzer)
 EXPOSE 80
 
-# Graphite
+# Graphite listener
 EXPOSE 2003
-
-# StatsD UDP port
-# EXPOSE 8125/udp
-
-# StatsD Management port
-# EXPOSE 8126
 
 
 

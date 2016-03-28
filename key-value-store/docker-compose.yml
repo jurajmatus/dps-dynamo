@@ -2,8 +2,8 @@ key-value-store:
   build: .
   container_name: dynamo
   environment:
-    GRAPHITE_HOST: 'localhost'
-    RSYSLOG_HOST: 'localhost'
+    GRAPHITE_HOST: 'logging'
+    RSYSLOG_HOST: 'logging'
   external_links:
     - logging
   ports:
