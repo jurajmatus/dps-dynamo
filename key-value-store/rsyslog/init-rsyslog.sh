@@ -1,9 +1,9 @@
 #!/bin/bash
 RSYSLOG_HOST="$RSYSLOG_HOST"
 if [ -z "$RSYSLOG_HOST" ] ; then
-   RSYSLOG_HOST="localhost"
+   RSYSLOG_HOST="logging"
 fi
 
-echo "*.* @$RSYSLOG_HOST:514" >> /etc/rsyslog.conf
-
+killall rsyslogd
+sed -i '58s/.*/*.* @'$RSYSLOG_HOST'/' /etc/rsyslog.conf
 /usr/sbin/rsyslogd -n

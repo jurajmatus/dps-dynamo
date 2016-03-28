@@ -28,5 +28,5 @@ metrics:
       rateUnit: seconds
       useRegexFilters: false
       frequency: 5 seconds
-      host: localhost
+      host: logging
       port: 2003
