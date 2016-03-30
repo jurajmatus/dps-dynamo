@@ -1,5 +1,9 @@
 #!/bin/bash -x
 
+pushd dropwizard
+sh build
+popd
+
 compose_file="docker-compose-bridge.yml"
 
 source ../env_var.rc
