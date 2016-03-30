@@ -3,8 +3,10 @@ services:
   key-value-store:
     build: .
     environment:
-     GRAPHITE_HOST: 'logging'
-     RSYSLOG_HOST: 'logging'
+      NODE1_IP: "${NODE1_IP}"
+      NODE2_IP: "${NODE2_IP}"
+      RSYSLOG_IP: "${RSYSLOG_IP}"
+      LOGGING_IP: "${LOGGING_IP}"
     ports:
       - "8080:8080"
     restart: always

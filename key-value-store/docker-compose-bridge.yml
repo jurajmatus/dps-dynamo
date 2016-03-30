@@ -4,12 +4,10 @@ services:
     build: .
     #container_name: dynamo
     environment:
-      GRAPHITE_HOST: 'localhost'
-      COLLECTD_HOST: 'localhost'
-      RSYSLOG_HOST: 'localhost'
-      GRAPHITE_IP: '192.168.122.84'
-      COLLECTD_IP: '192.168.122.84'
-      RSYSLOG_IP: '192.168.122.84'
+      NODE1_IP: "${NODE1_IP}"
+      NODE2_IP: "${NODE2_IP}"
+      RSYSLOG_IP: "${RSYSLOG_IP}"
+      LOGGING_IP: "${LOGGING_IP}"
     #ports:
       #- "8080:8080"
     #Consul ports
