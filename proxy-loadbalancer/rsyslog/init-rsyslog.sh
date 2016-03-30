@@ -1,13 +1,9 @@
 #!/bin/bash
-RSYSLOG_HOST="$RSYSLOG_HOST"
-if [ -z "$RSYSLOG_HOST" ] ; then
-   RSYSLOG_HOST="logging"
-fi
-
-if [ "$RSYSLOG_IP" ] ; then
-   RSYSLOG_HOST="$RSYSLOG_IP"
+RSYSLOG_IP="$RSYSLOG_IP"
+if [ -z "$RSYSLOG_IP" ] ; then
+   RSYSLOG_IP="logging"
 fi
 
 killall rsyslogd
-sed -i '58s/.*/*.* @'$RSYSLOG_HOST'/' /etc/rsyslog.conf
+sed -i '58s/.*/*.* @'$RSYSLOG_IP'/' /etc/rsyslog.conf
 /usr/sbin/rsyslogd -n

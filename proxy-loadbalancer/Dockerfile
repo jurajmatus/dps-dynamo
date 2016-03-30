@@ -24,11 +24,6 @@ COPY ./template-files/haproxy.ctmpl /etc/consul-templates/
 ADD ./haproxy/etc/default/haproxy /etc/default/
 ADD ./haproxy/etc/haproxy/haproxy.cfg /etc/haproxy/
 
-# ENV IP
-ENV NODE1_IP=192.168.122.84
-ENV NODE2_IP=10.0.0.6
-ENV RSYSLOG_IP=192.168.122.84
-
 EXPOSE 8080 443
 
 ENTRYPOINT ["/usr/local/bin/supervisord"]

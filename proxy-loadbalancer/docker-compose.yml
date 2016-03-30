@@ -5,3 +5,7 @@ haproxy-consul-template:
     - "8080:8080"
   #net: "host"
   restart: always
+  environment:
+    NODE1_IP: "${NODE1_IP}"
+    NODE2_IP: "${NODE2_IP}"
+    RSYSLOG_IP: "${RSYSLOG_IP}"
