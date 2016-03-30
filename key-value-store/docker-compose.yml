@@ -2,23 +2,10 @@ version: "2.0"
 services: 
   key-value-store:
     build: .
-    #container_name: dynamo
     environment:
      GRAPHITE_HOST: 'logging'
      RSYSLOG_HOST: 'logging'
-    external_links:
-      - logging
     ports:
       - "8080:8080"
-    #Consul ports
-      #- "8300"
-      #- "8301"
-      #- "8302"
-      #- "8400"
-      #- "8500"
-      #- "8600"
-    #Dynamo ports
-      #- "5550"
     restart: always
     network_mode: "bridge"
-    #net: dynamo-net

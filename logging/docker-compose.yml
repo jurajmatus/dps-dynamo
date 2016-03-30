@@ -7,3 +7,6 @@ logging:
     - "514:514"
     - "514:514/udp"
   restart: always
+  environment:
+    NODE1_IP: "${NODE1_IP}"
+    NODE2_IP: "${NODE2_IP}"
