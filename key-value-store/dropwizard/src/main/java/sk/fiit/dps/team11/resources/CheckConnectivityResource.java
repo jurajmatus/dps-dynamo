@@ -44,9 +44,14 @@ public class CheckConnectivityResource {
 			return new Sample(e.toString());
 		}
 
+		System.out.println("hostname: " + hostname );
+
 		healthResponse = healthResponse + hostname;
 
-		String urlStr = "http://10.0.0.8:8500/v1/health/service/dynamo";
+		String ip = System.getenv("NODE1_IP");
+		String urlStr = "http://" + ip + ":8500/v1/health/service/dynamo";
+		
+		System.out.println("consul health request: " + ip );
 
 		URLConnection connection;
 		try {
@@ -79,26 +84,13 @@ public class CheckConnectivityResource {
 		}
 	
 		System.out.println("response: '" + responseStr + "'");
-		//JSONObject jsonObj = new JSONObject(responseStr);
 		JSONArray array = new JSONArray(responseStr);
-		//JSONObject jsonObj = new JSONObject("{response: " + responseStr + "\"}");
-
-		/*JsonReader jsonReader = Json.createReader(response);
-		JsonArray array = jsonReader.readArray();
-		jsonReader.close();*/
 
 
-		//for (int i = 0; i < jsonObj.getJSONArray("Response").length(); i++) {
 		for (int i = 0; i < array.length(); i++) {
-			/*JSONObject jsonServ = jsonObj.getJSONArray("Response").getJSONObject(i).getJSONArray("Checks").getJSONObject(0);
-			JSONObject jsonSerf = jsonObj.getJSONArray("Response").getJSONObject(i).getJSONArray("Checks").getJSONObject(1);
-			JSONObject jsonNode = jsonObj.getJSONArray("Response").getJSONObject(i).getJSONObject("Node");*/
 			JSONObject jsonNode = array.getJSONObject(i).getJSONObject("Node");
 			JSONObject jsonServ = array.getJSONObject(i).getJSONArray("Checks").getJSONObject(0);
 			JSONObject jsonSerf = array.getJSONObject(i).getJSONArray("Checks").getJSONObject(1);
-			/*JSONObject jsonServ = array.getJSONArray("Checks").getJSONArray("Checks").getJSONObject(0);
-			JSONObject jsonSerf = array.getJSONArray("Checks").getJSONObject(1);
-			JSONObject jsonNode = array.getJSONObject("Node");*/
 		
 			String servStatus = jsonServ.getString("Status");
 			String serfStatus = jsonSerf.getString("Status");
@@ -123,6 +115,9 @@ public class CheckConnectivityResource {
 				catch (java.io.IOException e) {
 					return new Sample(e.toString()); 
 				}
+			}
+			else {
+				System.out.println("continue");
 			}
 		}
 

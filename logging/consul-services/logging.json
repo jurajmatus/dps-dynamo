@@ -1,7 +1,16 @@
 {
-  "service": {
-    "name": "dynamo", 
-    "tags": ["ver0.1"], 
-    "port": 8081
-  }
+  "services": [
+    {
+      "name": "graphite", 
+      "port": 2003
+    }, 
+    {
+      "name": "grafana-dashboard", 
+      "port": 80
+    },
+    {
+      "name": "rsyslog", 
+      "port": 514
+    }
+  ]
 }

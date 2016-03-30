@@ -28,5 +28,5 @@ metrics:
       rateUnit: seconds
       useRegexFilters: false
       frequency: 5 seconds
-      host: logging
+      host: 192.168.122.84
       port: 2003

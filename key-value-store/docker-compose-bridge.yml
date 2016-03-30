@@ -7,6 +7,9 @@ services:
       GRAPHITE_HOST: 'localhost'
       COLLECTD_HOST: 'localhost'
       RSYSLOG_HOST: 'localhost'
+      GRAPHITE_IP: '192.168.122.84'
+      COLLECTD_IP: '192.168.122.84'
+      RSYSLOG_IP: '192.168.122.84'
     #ports:
       #- "8080:8080"
     #Consul ports

@@ -8,10 +8,28 @@
   "start_join": [ "NODE1_IP", "NODE2_IP" ],
 
   "check": {
-    "id": "dynamo-api",
-    "name": "HTTP API on port 8081",
-    "http": "http://localhost:8081/healthcheck",
+    "id": "grafana-dashboard",
+    "name": "HTTP API on port 80",
+    "http": "http://localhost:80",
+    "interval": "5s",
+    "timeout": "3s"
+  },
+
+  "check": {
+    "id": "graphite",
+    "name": "Graphite on port 2003",
+    "tcp": "localhost:2003",
+    "interval": "5s",
+    "timeout": "3s"
+  },
+
+  "check": {
+    "id": "rsyslog",
+    "name": "Syslog on port 514",
+    "tcp": "localhost:514",
     "interval": "5s",
     "timeout": "3s"
   }
+
+
 }
