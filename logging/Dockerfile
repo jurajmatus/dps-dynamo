@@ -58,11 +58,6 @@ RUN mkdir -p /etc/consul.d
 ADD ./consul/config.json /etc/consul.d/
 ADD ./consul-services/logging.json /etc/consul.d/
 
-# Environment variables for IP setting
-ENV NODE1_IP=192.168.122.84
-ENV NODE2_IP=10.0.0.6
-ENV RSYSLOG_IP=192.168.122.84
-
 # PORTS
 
 # Rsyslog
