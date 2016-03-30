@@ -1,9 +1,15 @@
 consul_server:
   build: "."
   #image: "voxxit/consul"
+  environment:
+    NODE1_IP: "${NODE1_IP}"
+    NODE2_IP: "${NODE2_IP}"
+    RSYSLOG_IP: "${RSYSLOG_IP}"
+    LOGGING_IP: "${LOGGING_IP}"
+    HOST_IP: "${HOST_IP}"
+    HOSTNAME: "${HOSTNAME}"
   volumes:
     - "/var/log/consul"
     - "/etc/consul.d"
   net: "host"
-  command: ["agent", "-server", "-bootstrap", "-node=${HOSTNAME}-consul-server", "-config-dir=/etc/consul.d", "-ui-dir=/ui", "-data-dir=/data", "-advertise=${HOST_IP}", "-client=${HOST_IP}", "-join=${NODE1_IP}", "-join=${NODE2_IP}"]
-  #logging: 
+  command: ["/usr/bin/start-consul.sh"]
