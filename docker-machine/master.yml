@@ -1,6 +1,5 @@
 consul_server:
    build: ../service-discovery
-   container_name: consul
    environment:
       NODE1_IP: "${NODE1_IP}"
       NODE2_IP: "${NODE2_IP}"
@@ -11,7 +10,6 @@ consul_server:
    net: "host"
 haproxy-consul-template:
    build: ../proxy-loadbalancer
-   container_name: haproxy
    ports:
       - "8080:8080"
    restart: always
@@ -21,7 +19,6 @@ haproxy-consul-template:
       LOGGING_IP: "${LOGGING_IP}"
 logging:
    build: ../logging
-   container_name: logging
    ports:
       - "80:80"
       - "2003:2003"
@@ -38,3 +35,4 @@ key-value-store:
       NODE2_IP: "${NODE2_IP}"
       LOGGING_IP: "${LOGGING_IP}"
    restart: always
+   net: "bridge"

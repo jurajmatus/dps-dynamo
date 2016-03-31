@@ -5,3 +5,4 @@ key-value-store:
       NODE2_IP: "${NODE2_IP}"
       LOGGING_IP: "${LOGGING_IP}"
    restart: always
+   net: "bridge"

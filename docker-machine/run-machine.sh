@@ -29,7 +29,7 @@ elif [ "$1" == "slave" ] ; then
    SERVICES="key-value-store"
    IP="$(docker-machine ip slave)"
    eval "$(docker-machine env master)"
-   docker-compose -f slave-yml scale key-value-store=2
+   docker-compose -f slave.yml scale key-value-store=2
 else
    echo "Unsuported machine $1"
 fi
