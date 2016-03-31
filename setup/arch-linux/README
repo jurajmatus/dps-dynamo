@@ -1,0 +1,4 @@
+File docker.service:
+edit "--cluster-store=consul://192.168.2.151:8500 --cluster-advertise=wlan0:2375" -> replace IP address and interface for the ones you use
+place into systemd folder
+register
