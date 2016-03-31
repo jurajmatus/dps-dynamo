@@ -1,0 +1,40 @@
+consul_server:
+   build: ../service-discovery
+   container_name: consul
+   environment:
+      NODE1_IP: "${NODE1_IP}"
+      NODE2_IP: "${NODE2_IP}"
+      HOST_IP: "${HOST_IP}"
+   volumes:
+      - "/var/log/consul"
+      - "/etc/consul.d"
+   net: "host"
+haproxy-consul-template:
+   build: ../proxy-loadbalancer
+   container_name: haproxy
+   ports:
+      - "8080:8080"
+   restart: always
+   environment:
+      NODE1_IP: "${NODE1_IP}"
+      NODE2_IP: "${NODE2_IP}"
+      LOGGING_IP: "${LOGGING_IP}"
+logging:
+   build: ../logging
+   container_name: logging
+   ports:
+      - "80:80"
+      - "2003:2003"
+      - "514:514"
+      - "514:514/udp"
+   restart: always
+   environment:
+      NODE1_IP: "${NODE1_IP}"
+      NODE2_IP: "${NODE2_IP}"
+key-value-store:
+   build: ../key-value-store
+   environment:
+      NODE1_IP: "${NODE1_IP}"
+      NODE2_IP: "${NODE2_IP}"
+      LOGGING_IP: "${LOGGING_IP}"
+   restart: always
