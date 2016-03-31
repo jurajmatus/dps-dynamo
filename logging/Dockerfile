@@ -52,7 +52,8 @@ ADD ./nginx/nginx.conf /etc/nginx/nginx.conf
 ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Consul agent
-ADD ./consul/consul /usr/bin/
+ADD ./consul/consul /usr/bin/consul
+ADD ./consul/init-consul.sh /usr/bin/init-consul.sh
 RUN mkdir -p /tmp/consul
 RUN mkdir -p /etc/consul.d
 ADD ./consul/config.json /etc/consul.d/
