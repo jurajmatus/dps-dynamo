@@ -10,17 +10,18 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
 
 # Installations
 RUN apt-get update && apt-get install -y rsyslog python python3.4 curl vim
-    
-# Consul agent
-ADD ./consul/consul /usr/bin/
-RUN mkdir -p /tmp/consul
-RUN mkdir -p /etc/consul.d
-
-# Supervisor
 COPY ./pip/get-pip.py /tmp/get-pip.py
 RUN python /tmp/get-pip.py
 RUN mkdir -p /var/log/supervisor
 RUN pip install supervisor 
+    
+# Consul agent
+ADD ./consul/consul /usr/bin/consul
+ADD ./consul/init-consul.sh /usr/bin/init-consul.sh
+RUN mkdir -p /tmp/consul
+RUN mkdir -p /etc/consul.d
+
+# Supervisor
 COPY ./supervisord.conf /etc/supervisord.conf
 
 # Rsyslog
@@ -32,20 +33,7 @@ ADD ./dropwizard/app.jar /usr/bin/app.jar
 ADD ./dropwizard/conf.yaml /etc/conf.yaml
 ADD ./dropwizard/run.sh /usr/bin/app.sh
 
-# PORTS
-# Dropwizard
-#EXPOSE 8080
-
-# Consul ports
-#EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8600 8600/udp
-
 ADD ./consul/config.json /etc/consul.d/
 ADD ./consul-services/dps-dynamo.json /etc/consul.d/
-
-# Environment variables for IP setting
-ENV NODE1_IP=192.168.122.84
-ENV NODE2_IP=10.0.0.6
-ENV RSYSLOG_IP=192.168.122.84
-ENV LOGGING_IP=192.168.122.84
 
 ENTRYPOINT ["/usr/local/bin/supervisord"]
