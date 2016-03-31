@@ -21,7 +21,7 @@ fi
 
 
 if [ "$1" == "master" ] ; then
-   SERVICES="service-discovery proxy-loadbalancer logging"
+   SERVICES="service-discovery proxy-loadbalancer logging key-value-store"
    IP="$(docker-machine ip master)"
    eval "$(docker-machine env master)"
 elif [ "$1" == "slave" ] ; then
