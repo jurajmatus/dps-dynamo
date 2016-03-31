@@ -8,4 +8,4 @@ haproxy-consul-template:
   environment:
     NODE1_IP: "${NODE1_IP}"
     NODE2_IP: "${NODE2_IP}"
-    RSYSLOG_IP: "${RSYSLOG_IP}"
+    LOGGING_IP: "${LOGGING_IP}"
