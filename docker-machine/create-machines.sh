@@ -26,12 +26,16 @@ fi
 
 docker-machine create\
  -d virtualbox\
- --engine-opt="bip=192.168.101.1/24"\
- --engine-opt="fixed-cidr=192.168.101.0/24"\
+ --engine-opt="bip=192.168.101.1/24" \
+ --engine-opt="fixed-cidr=192.168.101.0/24" \
  master
  
 docker-machine create\
- --engine-opt="bip=192.168.101.1/24"\
- --engine-opt="fixed-cidr=192.168.101.0/24"\
  -d virtualbox\
+ --swarm --swarm-master \
+ --swarm-discovery="consul://$(docker-machine ip master):8500" \
+ --engine-opt="cluster-store=consul://$(docker-machine ip master):8500" \
+ --engine-opt="cluster-advertise=eth1:2375" \
+ --engine-opt="bip=192.168.101.1/24" \
+ --engine-opt="fixed-cidr=192.168.101.0/24" \
  slave
