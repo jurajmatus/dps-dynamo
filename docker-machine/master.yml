@@ -28,11 +28,4 @@ logging:
    environment:
       NODE1_IP: "${NODE1_IP}"
       NODE2_IP: "${NODE2_IP}"
-key-value-store:
-   build: ../key-value-store
-   environment:
-      NODE1_IP: "${NODE1_IP}"
-      NODE2_IP: "${NODE2_IP}"
-      LOGGING_IP: "${LOGGING_IP}"
-   restart: always
-   net: "bridge"
+      

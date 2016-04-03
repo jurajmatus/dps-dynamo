@@ -13,23 +13,17 @@ function readip {
 }
 
 export NODE1_IP="$(docker-machine ip master)"
-export NODE2_IP="$(docker-machine ip slave)"
 export LOGGING_IP="$(docker-machine ip master)"
 export HOST_IP=$(readip "eth0")
 if [ -z "$HOST_IP" ] ; then
    export HOST_IP=$(readip "wlan0")
 fi
 
-
 if [ "$1" == "master" ] ; then
-   export HOST_IP="$(docker-machine ip master)"
    eval "$(docker-machine env master)"
-   export HOST_IP=$(readip "wlan0")
    docker-compose -f master.yml up
 elif [ "$1" == "slave" ] ; then
-   export HOST_IP="$(docker-machine ip slave)"
-   IP="$(docker-machine ip slave)"
-   eval "$(docker-machine env master)"
+   eval "$(docker-machine env slave)"
    docker-compose -f slave.yml scale key-value-store=2
 else
    echo "Unsuported machine $1"

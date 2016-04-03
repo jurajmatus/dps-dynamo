@@ -8,4 +8,4 @@
  -advertise="${HOST_IP}"\
  -client="${HOST_IP}"\
  -join="${NODE1_IP}"\
- -join="${NODE2_IP}"
+#  -join="${NODE2_IP}"
