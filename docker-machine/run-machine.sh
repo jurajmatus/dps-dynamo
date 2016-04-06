@@ -22,7 +22,7 @@ elif [ "$1" == "slave" ] ; then
 
    docker-machine start slave
    eval "$(docker-machine env slave)"
-   pushd ../key-value/store/dropwizard
+   pushd ../key-value-store/dropwizard
    sh build.sh
    docker-compose -f slave.yml scale key-value-store=2
    popd
