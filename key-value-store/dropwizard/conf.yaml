@@ -30,3 +30,12 @@ metrics:
       frequency: 5 seconds
       host: logging
       port: 2003
+activeMQ:
+  brokerUrl: tcp://localhost:61616
+  pool:
+    maxConnections: 1
+    maximumActiveSessionPerConnection: 3
+    blockIfSessionPoolIsFull: false
+    idleTimeoutMills: 30000
+    createConnectionOnStartup: false
+    timeBetweenExpirationCheckMillis: 20000

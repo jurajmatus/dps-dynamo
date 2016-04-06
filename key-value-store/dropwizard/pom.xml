@@ -5,6 +5,14 @@
 	<artifactId>KeyValueStore</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+	<repositories>
+		<repository>
+			<id>mbknor</id>
+			<name>mbknor</name>
+			<url>https://raw.githubusercontent.com/mbknor/mbknor.github.com/master/m2repo/releases</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.dropwizard</groupId>
@@ -33,22 +41,25 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20160212</version>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+			<version>5.13.2</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.4</version>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-kahadb-store</artifactId>
+			<version>5.8.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish</groupId>
-			<artifactId>javax.json</artifactId>
-			<version>1.0.4</version>
+			<groupId>com.kjetland.dropwizard</groupId>
+			<artifactId>dropwizard-activemq</artifactId>
+			<version>0.3.13</version>
 		</dependency>
-
-
+		<dependency>
+			<groupId>berkeleydb</groupId>
+			<artifactId>je</artifactId>
+			<version>3.2.76</version>
+		</dependency>
 
 	</dependencies>
 
