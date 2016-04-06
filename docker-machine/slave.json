@@ -9,7 +9,7 @@
         "StorePath": "/root/.docker/machine",
         "SwarmMaster": true,
         "SwarmHost": "tcp://0.0.0.0:3376",
-        "SwarmDiscovery": "consul://192.168.99.100:8500",
+        "SwarmDiscovery": "consul://${MASTER_MACHINE_IP}:8500",
         "VBoxManager": {},
         "CPU": 1,
         "Memory": 1024,
@@ -31,7 +31,7 @@
         "Disk": 0,
         "EngineOptions": {
             "ArbitraryFlags": [
-                "cluster-store=consul://192.168.99.100:8500",
+                "cluster-store=consul://${MASTER_MACHINE_IP}:8500",
                 "cluster-advertise=eth1:2375",
                 "bip=192.168.101.1/24",
                 "fixed-cidr=192.168.101.0/24"
@@ -52,7 +52,7 @@
         "SwarmOptions": {
             "IsSwarm": true,
             "Address": "",
-            "Discovery": "consul://192.168.99.100:8500",
+            "Discovery": "consul://${MASTER_MACHINE_IP}8500",
             "Master": true,
             "Host": "tcp://0.0.0.0:3376",
             "Image": "swarm:latest",
