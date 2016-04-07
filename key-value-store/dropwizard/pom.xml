@@ -46,11 +46,6 @@
 			<version>5.13.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-kahadb-store</artifactId>
-			<version>5.8.0</version>
-		</dependency>
-		<dependency>
 			<groupId>com.kjetland.dropwizard</groupId>
 			<artifactId>dropwizard-activemq</artifactId>
 			<version>0.3.13</version>

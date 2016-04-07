@@ -31,7 +31,7 @@ metrics:
       host: logging
       port: 2003
 activeMQ:
-  brokerUrl: tcp://localhost:61616
+  brokerUrl: vm://local-mq
   pool:
     maxConnections: 1
     maximumActiveSessionPerConnection: 3

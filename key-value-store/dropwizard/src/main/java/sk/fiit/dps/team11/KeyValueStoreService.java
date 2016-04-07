@@ -47,6 +47,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		BrokerService brokerService = new BrokerService();
 		try {
 			brokerService.addConnector("tcp://localhost:61616");
+			brokerService.setBrokerName("local-mq");
+			brokerService.setPersistent(false);
 			brokerService.start();
 		} catch (Exception e) {
 			LOGGER.error("Couldn't initialize Message queue");
