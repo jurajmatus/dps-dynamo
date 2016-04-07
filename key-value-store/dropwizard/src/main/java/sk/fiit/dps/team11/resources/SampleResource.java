@@ -69,7 +69,7 @@ public class SampleResource {
 		ObjectNode ret = JsonNodeFactory.instance.objectNode();
 		ret.put("present", value.isPresent());
 		if (value.isPresent()) {
-			ret.put("value", value.get());
+			ret.put("value", new String(value.get()));
 		}
 		
 		return ret;
