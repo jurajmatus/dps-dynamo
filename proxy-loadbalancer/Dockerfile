@@ -1,13 +1,9 @@
 FROM ubuntu
 
 RUN apt-get update -y
-#RUN apt-get install nano -y
-RUN apt-get install -y haproxy rsyslog
+RUN apt-get install -y haproxy rsyslog python python3.4 curl unzip vim python-pip
 
 # Supervisor
-RUN apt-get install -y python python3.4 curl vim
-COPY ./pip/get-pip.py /tmp/get-pip.py
-RUN python /tmp/get-pip.py
 RUN mkdir -p /var/log/supervisor
 RUN pip install supervisor
 COPY ./supervisord.conf /etc/supervisord.conf
@@ -17,7 +13,7 @@ ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
 ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
 
 # Consul template
-COPY ./consul-template-bin/consul-template /usr/bin/
+RUN curl -o /tmp/consul-template.zip https://releases.hashicorp.com/consul-template/0.12.1/consul-template_0.12.1_linux_amd64.zip && unzip /tmp/consul-template.zip -d /usr/bin/
 COPY ./template-files/haproxy.ctmpl /etc/consul-templates/
 
 # HAPROXY CONFIG

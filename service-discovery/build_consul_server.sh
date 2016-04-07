@@ -12,6 +12,7 @@
 
 source ../env_var.rc
 docker-compose build
+
 #sleep 8
 #docker network create -d overlay --subnet=10.0.100.0/24 dynamo-net
 

@@ -9,14 +9,12 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     apt-get install -y oracle-java8-installer oracle-java8-set-default
 
 # Installations
-RUN apt-get update && apt-get install -y rsyslog python python3.4 curl vim
-COPY ./pip/get-pip.py /tmp/get-pip.py
-RUN python /tmp/get-pip.py
+RUN apt-get update && apt-get install -y rsyslog python python3.4 curl vim python-pip unzip
 RUN mkdir -p /var/log/supervisor
 RUN pip install supervisor 
     
 # Consul agent
-ADD ./consul/consul /usr/bin/consul
+RUN curl -o /tmp/consul.zip https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip && unzip /tmp/consul.zip -d /usr/bin/
 ADD ./consul/init-consul.sh /usr/bin/init-consul.sh
 RUN mkdir -p /tmp/consul
 RUN mkdir -p /etc/consul.d

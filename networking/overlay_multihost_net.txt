@@ -2,7 +2,7 @@
 ...
 
 2. install net utils for additional debug:
-$ yum install bridge-utils iproute tcpdump iptables iptables-services
+$ yum install git openssh-clients openssh-server bridge-utils iproute tcpdump iptables iptables-services
 
 3. install docker and consul
 $ curl -fsSL https://get.docker.com/ | sh

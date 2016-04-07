@@ -5,7 +5,7 @@ FROM jlachowski/grafana-graphite-statsd
 RUN apt-get update && \
     add-apt-repository ppa:adiscon/v8-stable && \
     apt-get -y -q install rsyslog && \
-    apt-get -y -q install apache2 libapache2-mod-php5 php5-mysql
+    apt-get -y -q install apache2 libapache2-mod-php5 php5-mysql unzip
 
 
 # CONFIGURATIONS
@@ -51,8 +51,8 @@ RUN chmod 666 /var/www/config.php
 ADD ./nginx/nginx.conf /etc/nginx/nginx.conf
 ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Consul agent
-ADD ./consul/consul /usr/bin/consul
+# Consul
+RUN curl -o /tmp/consul.zip https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip && unzip /tmp/consul.zip -d /usr/bin/
 ADD ./consul/init-consul.sh /usr/bin/init-consul.sh
 RUN mkdir -p /tmp/consul
 RUN mkdir -p /etc/consul.d
