@@ -24,11 +24,12 @@ import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
 import sk.fiit.dps.team11.core.MQ;
+import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
 import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
-import sk.fiit.dps.team11.resources.SampleResource;
+import sk.fiit.dps.team11.resources.StorageResource;
 import sk.fiit.dps.team11.workers.SampleWorker;
 
 
@@ -83,6 +84,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		// Core objects		
 		DatabaseAdapter db = new DatabaseAdapter();
 		environment.lifecycle().manage(db);
+		
+		RequestStates states = new RequestStates();
 
 		MQ mq = new MQ();
 		
@@ -95,6 +98,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(metrics).to(MetricRegistry.class);
 				bind(db).to(DatabaseAdapter.class);
 				bind(mq).to(MQ.class);
+				bind(states).to(RequestStates.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)
@@ -106,7 +110,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(RuntimeExceptionMapper.class);
 
 		// Resources
-		environment.jersey().register(SampleResource.class);
+		environment.jersey().register(StorageResource.class);
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
