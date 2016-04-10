@@ -23,9 +23,10 @@ import com.kjetland.dropwizard.activemq.ActiveMQSender;
 import com.sleepycat.je.DatabaseException;
 
 import sk.fiit.dps.team11.annotations.MQSender;
+import sk.fiit.dps.team11.core.DatabaseAdapter;
+import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.models.Sample;
 import sk.fiit.dps.team11.models.SimpleEntry;
-import sk.fiit.dps.team11.providers.DatabaseAdapter;
 
 @Path("/sample")
 public class SampleResource {
@@ -34,6 +35,9 @@ public class SampleResource {
 	
 	@Inject
 	DatabaseAdapter db;
+	
+	@Inject
+	MQ mq;
 	
 	@MQSender(topic = "sample")
 	ActiveMQSender sender;
@@ -46,6 +50,8 @@ public class SampleResource {
 		if (value != null) {
 			LOGGER.info("Putting value {} into sample queue", value);
 			sender.send(value);
+			
+			mq.send("localhost", "sample", "Via remote sender " + value);
 		}
 		
 		return new Sample("Hello! The application works.");

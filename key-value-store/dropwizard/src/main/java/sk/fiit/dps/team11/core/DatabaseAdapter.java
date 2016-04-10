@@ -1,4 +1,4 @@
-package sk.fiit.dps.team11.providers;
+package sk.fiit.dps.team11.core;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

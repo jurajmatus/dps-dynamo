@@ -22,8 +22,9 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
+import sk.fiit.dps.team11.core.DatabaseAdapter;
+import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
-import sk.fiit.dps.team11.providers.DatabaseAdapter;
 import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
@@ -79,9 +80,12 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 											.getApplicationHandler().getServiceLocator());
 		});
 		
+		// Core objects		
 		DatabaseAdapter db = new DatabaseAdapter();
 		environment.lifecycle().manage(db);
 
+		MQ mq = new MQ();
+		
 		// Injections
 		environment.jersey().register(new AbstractBinder() {
 			@Override
@@ -90,6 +94,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(activeMQBundle).to(ActiveMQBundle.class);
 				bind(metrics).to(MetricRegistry.class);
 				bind(db).to(DatabaseAdapter.class);
+				bind(mq).to(MQ.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)
@@ -105,8 +110,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
-		injectManager.register(SampleWorker.class, sw ->
-				activeMQBundle.registerReceiver("sample", sw, String.class, true));
+		activeMQBundle.registerReceiver("sample", injectManager.register(new SampleWorker()),
+										String.class, true);
 
 	}
 
