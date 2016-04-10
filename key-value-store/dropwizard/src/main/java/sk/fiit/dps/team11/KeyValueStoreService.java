@@ -7,6 +7,7 @@ import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,7 @@ import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
 import sk.fiit.dps.team11.providers.DatabaseAdapter;
+import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
 import sk.fiit.dps.team11.resources.SampleResource;
@@ -71,6 +73,12 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		
 		MetricRegistry metrics = environment.metrics();
 		
+		InjectManager injectManager = new InjectManager();
+		environment.lifecycle().addServerLifecycleListener(server -> {
+			injectManager.injectLocator(((ServletContainer) environment.getJerseyServletContainer())
+											.getApplicationHandler().getServiceLocator());
+		});
+		
 		DatabaseAdapter db = new DatabaseAdapter();
 		environment.lifecycle().manage(db);
 
@@ -88,7 +96,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 					.to(new TypeLiteral<InjectionResolver<MQSender>>() {}).in(Singleton.class);
 			}
 		});
-
+		
 		// Providers, handlers, mappers
 		environment.jersey().register(RuntimeExceptionMapper.class);
 
@@ -97,7 +105,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
-		activeMQBundle.registerReceiver("sample", new SampleWorker(), String.class, true);
+		injectManager.register(SampleWorker.class, sw ->
+				activeMQBundle.registerReceiver("sample", sw, String.class, true));
 
 	}
 
