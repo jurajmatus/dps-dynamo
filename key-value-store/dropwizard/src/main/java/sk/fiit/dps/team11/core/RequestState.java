@@ -1,6 +1,7 @@
 package sk.fiit.dps.team11.core;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.container.AsyncResponse;
 
@@ -8,7 +9,9 @@ abstract public class RequestState<T> {
 	
 	private final UUID requestId;
 	
-	private AsyncResponse response;
+	private final AsyncResponse response;
+	
+	private final AtomicBoolean responseSent = new AtomicBoolean(false);
 
 	public RequestState(AsyncResponse response) {
 		this.requestId = UUID.randomUUID();
@@ -26,14 +29,7 @@ abstract public class RequestState<T> {
 	protected abstract T doRespond();
 	
 	protected void respond() {
-		AsyncResponse response = null;
-		synchronized (this.response) {
-			if (this.response != null) {
-				response = this.response;
-				this.response = null;
-			}
-		}
-		if (response != null) {
+		if (!responseSent.getAndSet(true)) {
 			response.resume(doRespond());
 		}
 	}

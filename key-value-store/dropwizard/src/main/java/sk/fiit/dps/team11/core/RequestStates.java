@@ -1,14 +1,14 @@
 package sk.fiit.dps.team11.core;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class RequestStates {
 
-	private final Map<UUID, RequestState<?>> states = new HashMap<>();
+	private final Map<UUID, RequestState<?>> states = new ConcurrentHashMap<>();
 
 	public void put(UUID requestId, RequestState<?> state) {
 		this.states.put(requestId, state);

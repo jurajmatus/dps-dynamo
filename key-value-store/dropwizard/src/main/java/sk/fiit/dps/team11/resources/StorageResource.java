@@ -12,6 +12,8 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.annotation.Timed;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
 import sk.fiit.dps.team11.annotations.MQSender;
@@ -27,19 +29,23 @@ public class StorageResource {
 	private static final Logger LOGGER = LoggerFactory.getLogger(StorageResource.class);
 	
 	@Inject
-	DatabaseAdapter db;
+	private DatabaseAdapter db;
 	
 	@Inject
-	MQ mq;
+	private MQ mq;
 	
 	@Inject
-	RequestStates states;
+	private RequestStates states;
 	
 	@MQSender(topic = "insert")
-	ActiveMQSender insertWorker;
+	private ActiveMQSender insertWorker;
+	
+	@Inject
+	private MetricRegistry metrics;
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
+	@Timed(name = "GET")
 	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
 		
 		GetRequestState state = new GetRequestState(response);
