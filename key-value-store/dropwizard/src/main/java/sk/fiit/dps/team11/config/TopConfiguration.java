@@ -16,10 +16,24 @@ public class TopConfiguration extends Configuration implements ActiveMQConfigHol
     @Valid
     private ActiveMQConfig activeMQ;
 	
+	@JsonProperty
+    private ParallelismConfiguration parallelism;
+	
+	@JsonProperty
+    private ReliabilityConfiguration reliability;
+	
 	public TopConfiguration() {}
 
     public ActiveMQConfig getActiveMQ() {
         return activeMQ;
     }
+
+	public ParallelismConfiguration getParallelism() {
+		return parallelism;
+	}
+
+	public ReliabilityConfiguration getReliability() {
+		return reliability;
+	}
 	
 }

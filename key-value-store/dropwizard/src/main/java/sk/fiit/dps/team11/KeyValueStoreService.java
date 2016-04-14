@@ -1,5 +1,7 @@
 package sk.fiit.dps.team11;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import javax.inject.Singleton;
 
 import org.apache.activemq.broker.BrokerService;
@@ -25,6 +27,7 @@ import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
 import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.core.RequestStates;
+import sk.fiit.dps.team11.core.Topology;
 import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
 import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
@@ -89,6 +92,13 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 
 		MQ mq = new MQ();
 		
+		ScheduledExecutorService execService =
+			environment.lifecycle().scheduledExecutorService("sch-thread-pool-%d")
+				.threads(configuration.getParallelism().getNumScheduledThreads())
+				.build();
+		
+		Topology topology = injectManager.register(new Topology());
+		
 		// Injections
 		environment.jersey().register(new AbstractBinder() {
 			@Override
@@ -99,6 +109,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(db).to(DatabaseAdapter.class);
 				bind(mq).to(MQ.class);
 				bind(states).to(RequestStates.class);
+				bind(execService).to(ScheduledExecutorService.class);
+				bind(topology).to(Topology.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)

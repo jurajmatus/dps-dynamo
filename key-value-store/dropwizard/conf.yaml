@@ -39,3 +39,7 @@ activeMQ:
     idleTimeoutMills: 30000
     createConnectionOnStartup: false
     timeBetweenExpirationCheckMillis: 20000
+parallelism:
+  numScheduledThreads: 2
+reliability:
+  numReplicas: 3
