@@ -48,6 +48,11 @@ public class StorageResource {
 	@Timed(name = "GET")
 	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
 		
+		// TODO - query param - > path param
+		// TODO - isMy ? execute : redirect
+		// TODO - async response: timeout
+		// TODO - extract to storage executor
+		
 		GetRequestState state = new GetRequestState(response);
 		LOGGER.info("Received GET request with id {}", state.getRequestId());
 		
@@ -57,5 +62,7 @@ public class StorageResource {
 		states.withState(state.getRequestId(), GetRequestState.class, r -> "", () -> "");
 		
 	}
+	
+	// TODO - PUT, DELETE
 	
 }
