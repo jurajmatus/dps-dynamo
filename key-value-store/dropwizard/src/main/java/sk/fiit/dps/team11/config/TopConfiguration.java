@@ -1,5 +1,7 @@
 package sk.fiit.dps.team11.config;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -9,7 +11,7 @@ import com.kjetland.dropwizard.activemq.ActiveMQConfigHolder;
 
 import io.dropwizard.Configuration;
 import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.SimpleServerFactory;
+import io.dropwizard.server.DefaultServerFactory;
 
 public class TopConfiguration extends Configuration implements ActiveMQConfigHolder {
 
@@ -39,13 +41,18 @@ public class TopConfiguration extends Configuration implements ActiveMQConfigHol
 	}
 	
 	public int getPort() {
-		int httpPort = 0;
-		SimpleServerFactory serverFactory = (SimpleServerFactory) this.getServerFactory();
-		HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
-		if (connector.getClass().isAssignableFrom(HttpConnectorFactory.class)) {
-		    httpPort = connector.getPort();
-		}
-		return httpPort;
+		AtomicInteger httpPort = new AtomicInteger(8080);
+		try {
+			DefaultServerFactory serverFactory = (DefaultServerFactory) this.getServerFactory();
+			serverFactory.getApplicationConnectors().stream()
+				.filter(c -> c instanceof HttpConnectorFactory)
+				.findFirst()
+				.ifPresent(_connector -> {
+					HttpConnectorFactory connector = (HttpConnectorFactory) _connector;
+				    httpPort.set(connector.getPort());
+				});
+		} catch (Exception e) {}
+		return httpPort.get();
 	}
 	
 }

@@ -62,7 +62,7 @@ public class Topology {
 		
 		// Stub implementation - redirect will be to loopback
 		return Stream.of(myAddress)
-			.map(addr -> new DynamoNode(addr.toString()))
+			.map(addr -> new DynamoNode(addr.getHostAddress()))
 			.collect(toList());
 	}
 	

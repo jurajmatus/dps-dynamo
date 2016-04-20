@@ -24,6 +24,7 @@ public class InjectManager {
 			while (!toInject.isEmpty()) {
 				Object toInject = this.toInject.poll();
 				locator.inject(toInject);
+				locator.postConstruct(toInject);
 			}
 		}
 	}

@@ -16,4 +16,9 @@ public class DynamoNode {
 		return ip;
 	}
 	
+	@Override
+	public String toString() {
+		return String.format("DynamoNode [%s]", ip);
+	}
+	
 }

@@ -1,5 +1,7 @@
 package sk.fiit.dps.team11.resources;
 
+import java.util.UUID;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -15,7 +17,9 @@ import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
+import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.MQ;
+import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.providers.InjectManager;
 
@@ -33,6 +37,9 @@ public class StorageResource {
 	@Inject
 	private InjectManager injectManager;
 	
+	@Inject
+	private RequestStates states;
+	
 	@MQSender(topic = "insert")
 	private ActiveMQSender insertWorker;
 	
@@ -44,7 +51,10 @@ public class StorageResource {
 		
 		StorageExecutor storageExecutor = StorageExecutor.create(injectManager, request);
 		storageExecutor.execute(() -> {
-			// TODO - put into message queue
+			UUID requestId = request.getRequestState().getRequestId();
+			states.withState(requestId, GetRequestState.class, s -> {
+				
+			}, () -> LOGGER.warn("Trying to work with inexistent state: {}", requestId));
 		});
 		
 	}

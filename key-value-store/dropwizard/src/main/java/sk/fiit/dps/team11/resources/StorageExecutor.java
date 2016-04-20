@@ -6,10 +6,21 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DynamoNode;
@@ -23,7 +34,6 @@ public class StorageExecutor {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(StorageExecutor.class);
 
-	@Inject
 	private final BaseRequest<?, ?> request;
 	
 	@Inject
@@ -34,6 +44,8 @@ public class StorageExecutor {
 	
 	@Inject
 	private Topology topology;
+	
+	private final static ObjectMapper MAPPER = new ObjectMapper();
 
 	public static StorageExecutor create(InjectManager injectManager, BaseRequest<?, ?> request) {
 		return injectManager.register(new StorageExecutor(request));
@@ -58,24 +70,52 @@ public class StorageExecutor {
 		}
 		
 		DynamoNode coordinatorNode = nodes.get(0);
-		
-		String url = String.format("http://%s:%d%s", coordinatorNode.getIp(), conf.getPort(), "" /* TODO - Path */);
-		HttpServletRequest servletRequest = request.getServletRequest();
 
-		ClientBuilder.newClient().target(url).request()
-			.build(servletRequest.getMethod())
-			// TODO - query parameters
-			// TODO - input stream
-			.invoke();
+		HttpServletRequest servletRequest = request.getServletRequest();
+		String url = UriBuilder.fromUri(servletRequest.getRequestURI())
+				.scheme("http")
+				.host(coordinatorNode.getIp())
+				.port(conf.getPort())
+				.replaceQuery(servletRequest.getQueryString())
+				.build()
+				.toString();
 		
-		// TODO
+		JsonNode input;
+		try {
+			input = MAPPER.valueToTree(request);
+		} catch (IllegalArgumentException e) {
+			input = null;
+		}
+
+		Builder requestBuilder = ClientBuilder.newClient().target(url).request();
+		Invocation invocation;
+		
+		if (input instanceof ObjectNode && !servletRequest.getMethod().equalsIgnoreCase("GET")) {
+			invocation = requestBuilder.build(servletRequest.getMethod(), Entity.entity(input, MediaType.APPLICATION_JSON));
+		} else {
+			invocation = requestBuilder.build(servletRequest.getMethod());
+		}
+		invocation.submit(new InvocationCallback<Response>() {
+
+			@Override
+			public void completed(Response resp) {
+				response.resume(resp);
+			}
+
+			@Override
+			public void failed(Throwable throwable) {
+				LOGGER.error("Redirect of request to {} failed", url);
+			}
+			
+		});
 	}
 	
 	public void execute(Runnable handler) {
-		LOGGER.info("Received GET request with id {}", request.getRequestState());
+		LOGGER.info("Received GET request with id {}", request.getRequestState().getRequestId());
 		
 		AsyncResponse response = request.getResponse();
 		response.setTimeout(conf.getReliability().getResponseTimeoutMillis(), TimeUnit.MILLISECONDS);
+		response.setTimeoutHandler(resp -> resp.cancel());
 		
 		// The key is in this node's responsibility - it will become the coordinator
 		if (topology.isMy(request.getKey())) {
