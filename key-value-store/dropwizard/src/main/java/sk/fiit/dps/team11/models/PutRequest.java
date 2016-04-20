@@ -6,11 +6,11 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 
-import sk.fiit.dps.team11.core.GetRequestState;
+import sk.fiit.dps.team11.core.PutRequestState;
 
-public class GetRequest extends BaseRequest<GetRequestState, GetResponse> {
+public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	
-	public GetRequest(@PathParam("key") String key,
+	public PutRequest(@PathParam("key") String key,
 			@Suspended AsyncResponse response,
 			@Context HttpServletRequest servletRequest) {
 		
@@ -18,13 +18,13 @@ public class GetRequest extends BaseRequest<GetRequestState, GetResponse> {
 	}
 
 	@Override
-	protected GetRequestState createRequestState() {
-		return new GetRequestState(getResponse());
+	protected PutRequestState createRequestState() {
+		return new PutRequestState(getResponse());
 	}
 
 	@Override
 	public String getLabel() {
-		return "GET";
+		return "POST";
 	}
 	
 }
