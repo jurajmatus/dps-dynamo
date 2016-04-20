@@ -1,9 +1,13 @@
 package sk.fiit.dps.team11.core;
 
-import java.util.Collections;
+import static java.util.stream.Collectors.toList;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -22,8 +26,16 @@ public class Topology {
 	@Inject
 	private ScheduledExecutorService execService;
 	
+	private InetAddress myAddress;
+	
 	@PostConstruct
 	private void init() {
+		try {
+			myAddress = InetAddress.getLocalHost();
+		} catch (UnknownHostException e) {
+			throw new RuntimeException("Cannot continue without having an IP address");
+		}
+		
 		// TODO - register some repeated polling?
 		// execService.scheduleAtFixedRate(this::poll, 0, 1, TimeUnit.SECONDS);
 	}
@@ -32,15 +44,26 @@ public class Topology {
 		
 	}
 	
+	public boolean isMy(byte[] key) {
+		// TODO
+		long hash = getPositionInChord(key);
+		
+		// Stub implementation to allow testing redirect / non-redirect branches
+		return (new Random()).nextBoolean();
+	}
+	
 	/**
 	 * 
-	 * @return list of nodes responsible for the key (the first item in list should be the coordinator)
+	 * @return list of nodes responsible for the key (except this one)
 	 */
 	public List<DynamoNode> nodesForKey(byte[] key) {
 		// TODO
 		long hash = getPositionInChord(key);
 		
-		return Collections.emptyList();
+		// Stub implementation - redirect will be to loopback
+		return Stream.of(myAddress)
+			.map(addr -> new DynamoNode(addr.toString()))
+			.collect(toList());
 	}
 	
 	// TODO - polling, notifications about new nodes / nodes removals
