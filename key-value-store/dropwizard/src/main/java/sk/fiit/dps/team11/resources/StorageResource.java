@@ -43,8 +43,8 @@ public class StorageResource {
 	@Inject
 	private RequestStates states;
 	
-	@MQSender(topic = "insert")
-	private ActiveMQSender insertWorker;
+	@MQSender(topic = "put")
+	private ActiveMQSender putWorker;
 	
 	private <T extends BaseRequest<U, ?>, U extends RequestState<?>> void base(
 			T request, Class<U> requestClass, Consumer<U> stateHandler) {
@@ -83,11 +83,12 @@ public class StorageResource {
 	
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
-	@Timed(name = "POST")
+	@Timed(name = "PUT")
 	public void doPut(@Suspended AsyncResponse response, @BeanParam PutRequest request) {
 		
 		base(request, PutRequestState.class, s -> {
-			
+			// TODO: version resolution, acknowledgments
+			putWorker.send(s.getRequestId());
 		});
 		
 	}

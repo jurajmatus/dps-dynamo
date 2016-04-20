@@ -35,7 +35,7 @@ abstract public class BaseRequest<T extends RequestState<U>, U> {
 	public HttpServletRequest getServletRequest() {
 		return servletRequest;
 	}
-
+	
 	public byte[] getKey() {
 		return key;
 	}
