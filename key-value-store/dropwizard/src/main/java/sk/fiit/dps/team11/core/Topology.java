@@ -54,7 +54,7 @@ public class Topology {
 	
 	/**
 	 * 
-	 * @return list of nodes responsible for the key (except this one)
+	 * @return list of nodes responsible for the key, ordered counter-clockwise (except this one)
 	 */
 	public List<DynamoNode> nodesForKey(byte[] key) {
 		// TODO
