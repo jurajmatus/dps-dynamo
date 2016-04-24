@@ -13,6 +13,8 @@
 
 ### Proxy and load balancing
 
+[HaProxy](http://www.haproxy.org) with Consul Template
+
 ### Logging
 
 For distributed logging we use a central [rsyslog](http://www.rsyslog.com) daemon collecting the log entries from all hosts.
