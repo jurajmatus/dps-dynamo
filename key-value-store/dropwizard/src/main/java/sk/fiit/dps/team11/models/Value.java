@@ -14,7 +14,7 @@ public class Value {
 	
 	private final byte[] value;
 
-	public Value(@JsonProperty("version") @JsonDeserialize(using = Version.Deserializer.class) Version version,
+	public Value(@JsonProperty("version") Version version,
 		@JsonProperty("value") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] value) {
 		
 		this.version = version;
@@ -22,7 +22,6 @@ public class Value {
 	}
 
 	@JsonProperty
-	@JsonSerialize(using = Version.Serializer.class)
 	public Version getVersion() {
 		return version;
 	}
