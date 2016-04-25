@@ -1,11 +1,8 @@
 package sk.fiit.dps.team11.core;
 
-import java.util.Arrays;
-
 import javax.ws.rs.container.AsyncResponse;
 
 import sk.fiit.dps.team11.models.PutResponse;
-import sk.fiit.dps.team11.models.Value;
 
 public class PutRequestState extends RequestState<PutResponse> {
 
@@ -27,7 +24,7 @@ public class PutRequestState extends RequestState<PutResponse> {
 
 	@Override
 	protected PutResponse doRespond() {
-		return new PutResponse("TODO", Arrays.asList(new Value("TODO", "TODO")));
+		return new PutResponse(true);
 	}
 
 }

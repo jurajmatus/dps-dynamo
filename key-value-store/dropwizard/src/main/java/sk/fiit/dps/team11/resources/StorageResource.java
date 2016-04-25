@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -21,13 +20,11 @@ import com.codahale.metrics.annotation.Timed;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
 import sk.fiit.dps.team11.annotations.MQSender;
-import sk.fiit.dps.team11.core.DeleteRequestState;
 import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.models.BaseRequest;
-import sk.fiit.dps.team11.models.DeleteRequest;
 import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.models.PutRequest;
 import sk.fiit.dps.team11.providers.InjectManager;
@@ -64,18 +61,6 @@ public class StorageResource {
 	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
 		
 		base(request, GetRequestState.class, s -> {
-			
-		});
-		
-	}
-	
-	@DELETE
-	@Produces(MediaType.APPLICATION_JSON)
-	@Timed(name = "DELETE")
-	@Path("{key}")
-	public void doDelete(@Suspended AsyncResponse response, @BeanParam DeleteRequest request) {
-		
-		base(request, DeleteRequestState.class, s -> {
 			
 		});
 		

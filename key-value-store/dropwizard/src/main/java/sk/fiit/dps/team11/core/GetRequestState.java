@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import javax.ws.rs.container.AsyncResponse;
 
+import org.glassfish.jersey.internal.util.Base64;
+
 import sk.fiit.dps.team11.models.GetResponse;
 import sk.fiit.dps.team11.models.Value;
 
@@ -27,7 +29,9 @@ public class GetRequestState extends RequestState<GetResponse> {
 
 	@Override
 	protected GetResponse doRespond() {
-		return new GetResponse("TODO", Arrays.asList(new Value("TODO", "TODO")));
+		return new GetResponse(
+				Base64.encode("TESTING KEY".getBytes()),
+				Arrays.asList(new Value("VERSION", Base64.encode("ENCODED STRING".getBytes()))));
 	}
 
 }

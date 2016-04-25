@@ -1,30 +1,18 @@
 package sk.fiit.dps.team11.models;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PutResponse {
 	
-	private final String key;
-	
-	private final List<Value> values;
+	private final boolean success;
 
-	public PutResponse(@JsonProperty("key") String key,
-		@JsonProperty("values") List<Value> values) {
-		
-		this.key = key;
-		this.values = values;
+	public PutResponse(@JsonProperty("success") boolean success) {
+		this.success = success;
 	}
 
 	@JsonProperty
-	public String getKey() {
-		return key;
-	}
-
-	@JsonProperty
-	public List<Value> getValues() {
-		return values;
+	public boolean isSuccess() {
+		return success;
 	}
 
 }

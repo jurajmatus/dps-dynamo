@@ -6,7 +6,11 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ByteArraySerializer;
 
+import sk.fiit.dps.team11.core.ByteArrayDeserializer;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.Version;
 
@@ -16,15 +20,19 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	
 	private final Version fromVersion;
 	
-	public PutRequest(@JsonProperty("key") String key,
-			@JsonProperty("value") String value,
+	private final int minNumWrites;
+	
+	public PutRequest(@JsonProperty("key") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] key,
+			@JsonProperty("value") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] value,
 			@JsonProperty("fromVersion") Version fromVersion,
 			@Suspended AsyncResponse response,
-			@Context HttpServletRequest servletRequest) {
+			@Context HttpServletRequest servletRequest,
+			@JsonProperty("minNumWrites") int minNumWrites) {
 		
-		super(key.getBytes(), response, servletRequest);
-		this.value = value.getBytes();
+		super(key, response, servletRequest);
+		this.value = value;
 		this.fromVersion = fromVersion == null ? Version.INITIAL : fromVersion;
+		this.minNumWrites = minNumWrites;
 	}
 
 	@Override
@@ -38,11 +46,13 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	}
 	
 	@Override
+	@JsonSerialize(using = ByteArraySerializer.class)
 	@JsonProperty
 	public byte[] getKey() {
 		return super.getKey();
 	}
 
+	@JsonSerialize(using = ByteArraySerializer.class)
 	@JsonProperty
 	public byte[] getValue() {
 		return value;
@@ -51,6 +61,11 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	@JsonProperty
 	public Version getFromVersion() {
 		return fromVersion;
+	}
+
+	@JsonProperty
+	public int getMinNumWrites() {
+		return minNumWrites;
 	}
 	
 }
