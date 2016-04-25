@@ -28,8 +28,12 @@ public class Topology {
 	
 	private InetAddress myAddress;
 	
+	private long myPosition;
+	
 	@PostConstruct
 	private void init() {
+		myPosition = new Random().nextLong();
+		
 		try {
 			myAddress = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {

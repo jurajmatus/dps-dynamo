@@ -14,16 +14,17 @@ public class Value {
 	
 	private final byte[] value;
 
-	public Value(@JsonProperty("version") String version,
+	public Value(@JsonProperty("version") @JsonDeserialize(using = Version.Deserializer.class) Version version,
 		@JsonProperty("value") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] value) {
 		
-		this.version = new Version();
+		this.version = version;
 		this.value = value;
 	}
 
 	@JsonProperty
-	public String getVersion() {
-		return version.toString();
+	@JsonSerialize(using = Version.Serializer.class)
+	public Version getVersion() {
+		return version;
 	}
 
 	@JsonProperty

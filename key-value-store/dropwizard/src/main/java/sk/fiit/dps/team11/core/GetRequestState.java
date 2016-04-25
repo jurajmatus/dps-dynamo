@@ -31,7 +31,7 @@ public class GetRequestState extends RequestState<GetResponse> {
 	protected GetResponse doRespond() {
 		return new GetResponse(
 				Base64.encode("TESTING KEY".getBytes()),
-				Arrays.asList(new Value("VERSION", Base64.encode("ENCODED STRING".getBytes()))));
+				Arrays.asList(new Value(Version.INITIAL, Base64.encode("ENCODED STRING".getBytes()))));
 	}
 
 }

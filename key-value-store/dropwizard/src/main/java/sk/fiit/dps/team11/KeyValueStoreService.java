@@ -1,7 +1,7 @@
 package sk.fiit.dps.team11;
 
-import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Stream;
 
 import javax.inject.Singleton;
 
@@ -35,6 +35,7 @@ import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
 import sk.fiit.dps.team11.resources.StorageResource;
 import sk.fiit.dps.team11.workers.PutWorker;
+import sk.fiit.dps.team11.workers.WrappedMethodWorker;
 
 
 public class KeyValueStoreService extends Application<TopConfiguration> {
@@ -128,8 +129,10 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
-		activeMQBundle.registerReceiver("put", injectManager.register(new PutWorker()),
-										UUID.class, true);
+		Stream.of(new PutWorker())
+			.map(worker -> injectManager.register(worker))
+			.flatMap(worker -> WrappedMethodWorker.scan(worker).stream())
+			.forEach(wrappedWorker -> wrappedWorker.register(activeMQBundle));
 
 	}
 
