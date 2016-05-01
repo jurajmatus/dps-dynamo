@@ -111,6 +111,8 @@ public class StorageExecutor {
 	}
 	
 	public void execute(Runnable handler) {
+		request.createRequestState(conf.getReliability().getNumReplicas());
+		
 		LOGGER.info("Received GET request with id {}", request.getRequestState().getRequestId());
 		
 		AsyncResponse response = request.getResponse();

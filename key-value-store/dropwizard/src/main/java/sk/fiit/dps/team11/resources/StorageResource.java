@@ -20,8 +20,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
 import sk.fiit.dps.team11.annotations.MQSender;
+import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.GetRequestState;
-import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.RequestStates;
@@ -40,6 +40,9 @@ public class StorageResource {
 	
 	@Inject
 	private RequestStates states;
+	
+	@Inject
+	TopConfiguration conf;
 	
 	@MQSender(topic = "put")
 	private ActiveMQSender putWorker;

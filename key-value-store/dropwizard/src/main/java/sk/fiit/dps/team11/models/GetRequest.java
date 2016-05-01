@@ -28,8 +28,8 @@ public class GetRequest extends BaseRequest<GetRequestState, GetResponse> {
 	}
 
 	@Override
-	protected GetRequestState createRequestState() {
-		return new GetRequestState(getResponse());
+	public GetRequestState createRequestState(int numReplicas) {
+		return new GetRequestState(getResponse(), minNumReads, numReplicas);
 	}
 
 	@Override
