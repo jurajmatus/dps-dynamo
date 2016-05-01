@@ -34,7 +34,10 @@ import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
 import sk.fiit.dps.team11.resources.StorageResource;
-import sk.fiit.dps.team11.workers.PutWorker;
+import sk.fiit.dps.team11.workers.DataManipulationWorker;
+import sk.fiit.dps.team11.workers.ReplicaFinderWorker;
+import sk.fiit.dps.team11.workers.ReplicationWorker;
+import sk.fiit.dps.team11.workers.TimeoutCheckWorker;
 import sk.fiit.dps.team11.workers.WrappedMethodWorker;
 
 
@@ -129,7 +132,10 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
-		Stream.of(new PutWorker())
+		Stream<Object> workers = Stream.of(new DataManipulationWorker(),
+			new ReplicaFinderWorker(), new ReplicationWorker(), new TimeoutCheckWorker());
+		
+		workers
 			.map(worker -> injectManager.register(worker))
 			.flatMap(worker -> WrappedMethodWorker.scan(worker).stream())
 			.forEach(wrappedWorker -> wrappedWorker.register(activeMQBundle));

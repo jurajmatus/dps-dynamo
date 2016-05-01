@@ -12,9 +12,9 @@ import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.workers.WrappedMethodWorker.MQListener;
 
-public class PutWorker {
+public class DataManipulationWorker {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PutWorker.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DataManipulationWorker.class);
 	
 	@Inject
 	DatabaseAdapter db;
@@ -28,6 +28,27 @@ public class PutWorker {
 		states.withState(requestId, PutRequestState.class, s -> {
 			// TODO - put into db
 		}, () -> LOGGER.warn("Trying to continue putting inexistent state: {}", requestId));
+		
+	}
+
+	@MQListener(queue = "put-replica")
+	public void receiveRemovePut(UUID requestId) {
+		
+		// TODO
+		
+	}
+
+	@MQListener(queue = "get")
+	public void receiveLocalGet(UUID requestId) {
+		
+		// TODO
+		
+	}
+
+	@MQListener(queue = "get-replica")
+	public void receiveRemoveGet(UUID requestId) {
+		
+		// TODO
 		
 	}
 

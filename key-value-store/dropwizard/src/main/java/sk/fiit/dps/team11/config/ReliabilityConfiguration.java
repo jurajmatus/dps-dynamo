@@ -7,6 +7,8 @@ public class ReliabilityConfiguration {
 	private int numReplicas = 3;
 	
 	private int responseTimeoutMillis = 500;
+	
+	private int nodeResponseTimeoutMillis = 200;
 
 	@JsonProperty
 	public int getNumReplicas() {
@@ -26,6 +28,16 @@ public class ReliabilityConfiguration {
 	@JsonProperty
 	public void setResponseTimeoutMillis(int responseTimeoutMillis) {
 		this.responseTimeoutMillis = responseTimeoutMillis;
+	}
+
+	@JsonProperty
+	public int getNodeResponseTimeoutMillis() {
+		return nodeResponseTimeoutMillis;
+	}
+
+	@JsonProperty
+	public void setNodeResponseTimeoutMillis(int nodeResponseTimeoutMillis) {
+		this.nodeResponseTimeoutMillis = nodeResponseTimeoutMillis;
 	}
 	
 }
