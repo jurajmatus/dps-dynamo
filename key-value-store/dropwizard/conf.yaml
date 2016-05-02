@@ -34,7 +34,7 @@ activeMQ:
   brokerUrl: vm://local-mq
   pool:
     maxConnections: 1
-    maximumActiveSessionPerConnection: 3
+    maximumActiveSessionPerConnection: 20
     blockIfSessionPoolIsFull: false
     idleTimeoutMills: 30000
     createConnectionOnStartup: false

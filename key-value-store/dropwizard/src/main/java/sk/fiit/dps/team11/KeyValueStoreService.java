@@ -128,8 +128,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
-		Stream<Object> workers = Stream.of(/*new DataManipulationWorker(),
-			new ReplicaFinderWorker(), new ReplicationWorker(), new TimeoutCheckWorker()*/);
+		Stream<Object> workers = Stream.of(new DataManipulationWorker(),
+			new ReplicaFinderWorker(), new ReplicationWorker(), new TimeoutCheckWorker());
 		
 		workers
 			.map(worker -> injectManager.register(worker))
