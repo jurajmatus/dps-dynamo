@@ -47,31 +47,67 @@ abstract public class RequestState<T> {
 		}
 	}
 	
-	public List<DynamoNode> getAndRemoveTimeoutedNodes() {
+	private List<DynamoNode> getTimeoutedNodes(boolean remove) {
 		List<DynamoNode> nodes = new ArrayList<>();
 		synchronized (this.data) {
 			for (Entry<DynamoNode, Optional<Object>> entry : this.data.entrySet()) {
 				if (!entry.getValue().isPresent()) {
 					nodes.add(entry.getKey());
-					this.data.remove(entry.getKey());
+					if (remove) {
+						this.data.remove(entry.getKey());
+					}
 				}
 			}
 		}
 		return nodes;
 	}
 	
-	public void putDataForNode(DynamoNode node, Object data) {
+	public List<DynamoNode> getAndRemoveTimeoutedNodes() {
+		return getTimeoutedNodes(true);
+	}
+	
+	public List<DynamoNode> getTimeoutedNodes() {
+		return getTimeoutedNodes(false);
+	}
+	
+	protected boolean putForNode(DynamoNode node, Object data) {
 		synchronized (this.data) {
 			// Duplicate data will be discarded
-			this.data.computeIfPresent(node, (key, oldVal) ->
-				oldVal.isPresent() ? oldVal : Optional.of(data));
+			if (this.data.containsKey(node)) {
+				return false;
+			}
+			this.data.put(node, Optional.of(data));
+			return true;
 		}
 	}
 	
-	public void putDataForSelf(Object data) {
+	protected boolean putForSelf(Object data) {
 		synchronized (this) {
+			if (dataFromSelf.isPresent()) {
+				return false;
+			}
 			dataFromSelf = Optional.of(data);
+			return true;
 		}
+	}
+	
+	protected <D> List<D> getData(Class<D> as) {
+		List<D> data = new ArrayList<>();
+		
+		synchronized (this) {
+			if (dataFromSelf.filter(as::isInstance).isPresent()) {
+				data.add(as.cast(dataFromSelf.get()));
+			}
+		}
+		synchronized (this.data) {
+			for (Entry<DynamoNode, Optional<Object>> entry : this.data.entrySet()) {
+				if (entry.getValue().filter(as::isInstance).isPresent()) {
+					data.add(as.cast(entry.getValue().get()));
+				}
+			}
+		}
+		
+		return data;
 	}
 	
 	protected int getState() {

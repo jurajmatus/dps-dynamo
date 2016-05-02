@@ -1,25 +1,34 @@
 package sk.fiit.dps.team11.core;
 
-import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.container.AsyncResponse;
 
-import org.glassfish.jersey.internal.util.Base64;
-
 import sk.fiit.dps.team11.models.GetResponse;
-import sk.fiit.dps.team11.models.Value;
+import sk.fiit.dps.team11.models.VersionedValue;
 
 public class GetRequestState extends RequestState<GetResponse> {
 
 	public GetRequestState(AsyncResponse response, int minimum, int all) {
 		super(response, minimum, all);
 	}
+	
+	public boolean putDataForNode(DynamoNode node, VersionedValue data) {
+		return super.putForNode(node, data);
+	}
+	
+	public boolean putDataForSelf(VersionedValue data) {
+		return super.putForSelf(data);
+	}
+	
+	public List<VersionedValue> getAllData() {
+		return getData(VersionedValue.class);
+	}
 
 	@Override
 	protected GetResponse doRespond() {
-		return new GetResponse(
-				Base64.encode("TESTING KEY".getBytes()),
-				Arrays.asList(new Value(Version.INITIAL, Base64.encode("ENCODED STRING".getBytes()))));
+		return new GetResponse("TESTING KEY".getBytes(),
+					new VersionedValue(Version.INITIAL, "ENCODED STRING".getBytes()));
 	}
 
 }
