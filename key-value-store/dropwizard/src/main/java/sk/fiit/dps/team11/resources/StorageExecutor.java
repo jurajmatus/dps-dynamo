@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,8 +87,12 @@ public class StorageExecutor {
 		} catch (IllegalArgumentException e) {
 			input = null;
 		}
-
-		Builder requestBuilder = ClientBuilder.newClient().target(url).request();
+		
+		int timeout = conf.getReliability().getNodeResponseTimeoutMillis();
+		Builder requestBuilder = ClientBuilder.newClient()
+			.property(ClientProperties.CONNECT_TIMEOUT, timeout)
+			.property(ClientProperties.READ_TIMEOUT, timeout)
+			.target(url).request();
 		Invocation invocation;
 		
 		if (input instanceof ObjectNode && !servletRequest.getMethod().equalsIgnoreCase("GET")) {
@@ -104,7 +109,13 @@ public class StorageExecutor {
 
 			@Override
 			public void failed(Throwable throwable) {
-				LOGGER.error("Redirect of request to {} failed", url);
+				if (throwable.getClass().getSimpleName().contains("Timeout")) {
+					LOGGER.error("Timeout elapsed for request to {}, updating topology and retrying", url);
+					topology.notifyFailedNode(coordinatorNode);
+					handleRedirect(response);
+				} else {
+					LOGGER.error("Redirect of request to {} failed", url);
+				}
 			}
 			
 		});

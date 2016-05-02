@@ -41,21 +41,16 @@ public class DynamoNode implements Comparable<DynamoNode> {
 	@Override
 	// Generated
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof DynamoNode)) {
 			return false;
-		DynamoNode other = (DynamoNode) obj;
-		if (ip == null) {
-			if (other.ip != null)
-				return false;
-		} else if (!ip.equals(other.ip))
-			return false;
-		if (position != other.position)
-			return false;
-		return true;
+		}
+		return ip.equals(((DynamoNode) obj).ip);
 	}
 
 	@Override
