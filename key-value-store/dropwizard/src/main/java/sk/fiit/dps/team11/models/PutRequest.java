@@ -36,7 +36,7 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	}
 
 	@Override
-	public PutRequestState createRequestState(int numReplicas) {
+	public PutRequestState _createRequestState(int numReplicas) {
 		return new PutRequestState(getResponse(), minNumWrites, numReplicas);
 	}
 

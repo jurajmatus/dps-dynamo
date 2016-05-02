@@ -29,6 +29,7 @@ import sk.fiit.dps.team11.core.DatabaseAdapter;
 import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.core.Topology;
+import sk.fiit.dps.team11.core.VersionResolution;
 import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
 import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
@@ -93,16 +94,10 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		DatabaseAdapter db = new DatabaseAdapter();
 		environment.lifecycle().manage(db);
 		
-		RequestStates states = new RequestStates();
-
-		MQ mq = new MQ();
-		
 		ScheduledExecutorService execService =
 			environment.lifecycle().scheduledExecutorService("sch-thread-pool-%d")
 				.threads(configuration.getParallelism().getNumScheduledThreads())
 				.build();
-		
-		Topology topology = injectManager.register(new Topology());
 		
 		// Injections
 		environment.jersey().register(new AbstractBinder() {
@@ -112,11 +107,12 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(activeMQBundle).to(ActiveMQBundle.class);
 				bind(metrics).to(MetricRegistry.class);
 				bind(db).to(DatabaseAdapter.class);
-				bind(mq).to(MQ.class);
-				bind(states).to(RequestStates.class);
+				bind(MQ.class).to(MQ.class).in(Singleton.class);
+				bind(RequestStates.class).to(RequestStates.class).in(Singleton.class);
 				bind(execService).to(ScheduledExecutorService.class);
-				bind(topology).to(Topology.class);
+				bind(Topology.class).to(Topology.class).in(Singleton.class);
 				bind(injectManager).to(InjectManager.class);
+				bind(VersionResolution.class).to(InjectManager.class).in(Singleton.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)
@@ -132,8 +128,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers
-		Stream<Object> workers = Stream.of(new DataManipulationWorker(),
-			new ReplicaFinderWorker(), new ReplicationWorker(), new TimeoutCheckWorker());
+		Stream<Object> workers = Stream.of(/*new DataManipulationWorker(),
+			new ReplicaFinderWorker(), new ReplicationWorker(), new TimeoutCheckWorker()*/);
 		
 		workers
 			.map(worker -> injectManager.register(worker))

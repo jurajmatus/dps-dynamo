@@ -47,8 +47,30 @@ public class Version {
 		
 	}
 	
+	public static enum Comp {
+		FIRST_NEWER,
+		SECOND_NEWER,
+		MIXED,
+		EQUAL
+	}
+	
+	public static Comp compare(Version v1, Version v2) {
+		// TODO
+		return Comp.EQUAL;
+	}
+	
 	private Version() {
 		
+	}
+	
+	public Version increment(DynamoNode atNode) {
+		// TODO - pass modified set to constructor
+		return new Version();
+	}
+	
+	public Version merge(Version version) {
+		// TODO - pass set of maximums to constructors
+		return new Version();
 	}
 	
 }

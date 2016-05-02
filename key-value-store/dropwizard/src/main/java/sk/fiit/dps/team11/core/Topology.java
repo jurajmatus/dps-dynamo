@@ -47,7 +47,8 @@ public class Topology {
 		long hash = getPositionInChord(key);
 		
 		// Stub implementation to allow testing redirect / non-redirect branches
-		return (new Random()).nextBoolean();
+		// return (new Random()).nextBoolean();
+		return true;
 	}
 	
 	public DynamoNode self() {

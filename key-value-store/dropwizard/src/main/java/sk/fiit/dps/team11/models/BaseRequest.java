@@ -37,7 +37,12 @@ abstract public class BaseRequest<T extends RequestState<U>, U> {
 		return key;
 	}
 	
-	abstract public T createRequestState(int numReplicas);
+	public T createRequestState(int numReplicas) {
+		requestState = _createRequestState(numReplicas);
+		return requestState;
+	}
+	
+	abstract public T _createRequestState(int numReplicas);
 	
 	abstract public String getLabel();
 

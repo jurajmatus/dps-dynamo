@@ -25,9 +25,11 @@ import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.RequestStates;
+import sk.fiit.dps.team11.core.Version;
 import sk.fiit.dps.team11.models.BaseRequest;
 import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.models.PutRequest;
+import sk.fiit.dps.team11.models.VersionedValue;
 import sk.fiit.dps.team11.providers.InjectManager;
 
 @Path("/storage")
@@ -65,7 +67,7 @@ public class StorageResource {
 	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
 		
 		base(request, GetRequestState.class, s -> {
-			
+			s.putDataForSelf(new VersionedValue(Version.INITIAL, new byte[0]));
 		});
 		
 	}

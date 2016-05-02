@@ -14,8 +14,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import sk.fiit.dps.team11.core.Version.Deserializer;
-import sk.fiit.dps.team11.core.Version.Serializer;
+import sk.fiit.dps.team11.models.ByteArray.Deserializer;
+import sk.fiit.dps.team11.models.ByteArray.Serializer;
 
 @JsonSerialize(using = Serializer.class)
 @JsonDeserialize(using = Deserializer.class)
