@@ -1,13 +1,11 @@
 package sk.fiit.dps.team11.core;
 
-import static java.util.stream.Collectors.toList;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -26,16 +24,12 @@ public class Topology {
 	@Inject
 	private ScheduledExecutorService execService;
 	
-	private InetAddress myAddress;
-	
-	private long myPosition;
+	private DynamoNode self;
 	
 	@PostConstruct
 	private void init() {
-		myPosition = new Random().nextLong();
-		
 		try {
-			myAddress = InetAddress.getLocalHost();
+			self = new DynamoNode(InetAddress.getLocalHost().getHostAddress(), new Random().nextLong());
 		} catch (UnknownHostException e) {
 			throw new RuntimeException("Cannot continue without having an IP address");
 		}
@@ -56,6 +50,10 @@ public class Topology {
 		return (new Random()).nextBoolean();
 	}
 	
+	public DynamoNode self() {
+		return self;
+	}
+	
 	/**
 	 * 
 	 * @return list of nodes responsible for the key, ordered counter-clockwise (except this one)
@@ -65,11 +63,13 @@ public class Topology {
 		long hash = getPositionInChord(key);
 		
 		// Stub implementation - redirect will be to loopback
-		return Stream.of(myAddress)
-			.map(addr -> new DynamoNode(addr.getHostAddress()))
-			.collect(toList());
+		return Arrays.asList(self);
 	}
 	
 	// TODO - polling, notifications about new nodes / nodes removals
+	
+	public void notifyFailedNode(DynamoNode node) {
+		// TODO - remove from internal database, update positional info
+	}
 
 }
