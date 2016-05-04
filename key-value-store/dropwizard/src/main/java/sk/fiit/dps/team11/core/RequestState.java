@@ -1,6 +1,7 @@
 package sk.fiit.dps.team11.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +17,8 @@ abstract public class RequestState<T> {
 	
 	private final UUID requestId;
 	
+	private final byte[] key;
+	
 	private final AsyncResponse response;
 	
 	private final AtomicBoolean responseSent = new AtomicBoolean(false);
@@ -28,8 +31,9 @@ abstract public class RequestState<T> {
 	
 	private final Map<DynamoNode, Optional<Object>> data = new TreeMap<>();
 
-	public RequestState(AsyncResponse response, int minimum, int all) {
+	public RequestState(AsyncResponse response, byte[] key, int minimum, int all) {
 		this.requestId = UUID.randomUUID();
+		this.key = key;
 		this.response = response;
 		this.minimum = minimum;
 		this.all = all;
@@ -39,6 +43,18 @@ abstract public class RequestState<T> {
 		return requestId;
 	}
 	
+	public byte[] getKey() {
+		return key;
+	}
+
+	public void addNodes(Collection<DynamoNode> nodes) {
+		synchronized (this.data) {
+			for (DynamoNode node : nodes) {
+				this.data.put(node, Optional.empty());
+			}
+		}
+	}
+
 	public void addNodes(DynamoNode... nodes) {
 		synchronized (this.data) {
 			for (DynamoNode node : nodes) {

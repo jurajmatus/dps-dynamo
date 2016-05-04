@@ -9,8 +9,8 @@ import sk.fiit.dps.team11.models.VersionedValue;
 
 public class GetRequestState extends RequestState<GetResponse> {
 
-	public GetRequestState(AsyncResponse response, int minimum, int all) {
-		super(response, minimum, all);
+	public GetRequestState(AsyncResponse response, byte[] key, int minimum, int all) {
+		super(response, key, minimum, all);
 	}
 	
 	public boolean putDataForNode(DynamoNode node, VersionedValue data) {

@@ -64,6 +64,7 @@ public class Topology {
 		long hash = getPositionInChord(key);
 		
 		// Stub implementation - redirect will be to loopback
+		// Just for debugging - final implementation should not contain self
 		return Arrays.asList(self);
 	}
 	

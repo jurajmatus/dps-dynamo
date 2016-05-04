@@ -29,7 +29,7 @@ public class GetRequest extends BaseRequest<GetRequestState, GetResponse> {
 
 	@Override
 	public GetRequestState _createRequestState(int numReplicas) {
-		return new GetRequestState(getResponse(), minNumReads, numReplicas);
+		return new GetRequestState(getResponse(), getKey(), minNumReads, numReplicas);
 	}
 
 	@Override

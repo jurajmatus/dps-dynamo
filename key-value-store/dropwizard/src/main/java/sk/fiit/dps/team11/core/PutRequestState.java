@@ -6,8 +6,8 @@ import sk.fiit.dps.team11.models.PutResponse;
 
 public class PutRequestState extends RequestState<PutResponse> {
 
-	public PutRequestState(AsyncResponse response, int minimum, int all) {
-		super(response, minimum, all);
+	public PutRequestState(AsyncResponse response, byte[] key, int minimum, int all) {
+		super(response, key, minimum, all);
 	}
 
 	@Override
