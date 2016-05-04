@@ -1,0 +1,10 @@
+Classes:
+* RemotePutMessage
+* RemoteGetMessage
+
+Data manipulation:
+* get
+* put
+
+Version resolution:
+* basic implementation

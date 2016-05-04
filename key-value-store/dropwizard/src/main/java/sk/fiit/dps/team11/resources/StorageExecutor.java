@@ -128,7 +128,10 @@ public class StorageExecutor {
 		
 		AsyncResponse response = request.getResponse();
 		response.setTimeout(conf.getReliability().getResponseTimeoutMillis(), TimeUnit.MILLISECONDS);
-		response.setTimeoutHandler(resp -> resp.cancel());
+		response.setTimeoutHandler(resp -> {
+			resp.cancel();
+			states.forceRemove(request.getRequestState().getRequestId());
+		});
 		
 		// The key is in this node's responsibility - it will become the coordinator
 		if (topology.isMy(request.getKey())) {

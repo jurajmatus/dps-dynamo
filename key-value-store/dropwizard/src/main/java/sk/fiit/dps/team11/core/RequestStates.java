@@ -14,7 +14,7 @@ public class RequestStates {
 	}
 	
 	public <T extends RequestState<?>> void withState(UUID requestId, Class<T> subClass,
-		Consumer<T> ifPresent, Runnable ifNotPresent) {
+		Consumer<? super T> ifPresent, Runnable ifNotPresent) {
 		
 		if (states.containsKey(requestId)) {
 			
@@ -34,6 +34,10 @@ public class RequestStates {
 			ifNotPresent.run();
 		}
 		
+	}
+	
+	public void forceRemove(UUID requestId) {
+		states.remove(requestId);
 	}
 
 }

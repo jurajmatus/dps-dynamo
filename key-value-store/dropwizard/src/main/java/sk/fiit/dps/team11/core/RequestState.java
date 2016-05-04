@@ -82,7 +82,7 @@ abstract public class RequestState<T> {
 		return getTimeoutedNodes(true);
 	}
 	
-	public List<DynamoNode> getTimeoutedNodes() {
+	public List<DynamoNode> getNodesWithoutResponse() {
 		return getTimeoutedNodes(false);
 	}
 	
