@@ -16,6 +16,9 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.codahale.metrics.annotation.Timed;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
@@ -25,11 +28,10 @@ import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.RequestStates;
-import sk.fiit.dps.team11.core.Version;
+import sk.fiit.dps.team11.core.Topology;
 import sk.fiit.dps.team11.models.BaseRequest;
 import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.models.PutRequest;
-import sk.fiit.dps.team11.models.VersionedValue;
 import sk.fiit.dps.team11.providers.InjectManager;
 
 @Path("/storage")
@@ -46,11 +48,27 @@ public class StorageResource {
 	@Inject
 	TopConfiguration conf;
 	
+	@Inject
+	Topology topology;
+	
+	@Inject
+	MetricRegistry metrics;
+	
 	@MQSender(topic = "put")
 	private ActiveMQSender putWorker;
 	
+	@MQSender(topic = "get")
+	private ActiveMQSender getWorker;
+	
+	@MQSender(topic = "find-for-key")
+	private ActiveMQSender replicaFinderWorker;
+	
 	private <T extends BaseRequest<U, ?>, U extends RequestState<?>> void base(
 			T request, Class<U> requestClass, Consumer<U> stateHandler) {
+		
+		Timer timer = metrics.timer(
+			MetricRegistry.name(StorageResource.class, request.getLabel(), topology.self().getIp()));
+		Context time = timer.time();
 		
 		StorageExecutor storageExecutor = StorageExecutor.create(injectManager, request);
 		storageExecutor.execute(() -> {
@@ -58,6 +76,8 @@ public class StorageResource {
 			states.withState(requestId, requestClass, stateHandler,
 					() -> LOGGER.warn("Trying to work with inexistent state: {}", requestId));
 		});
+		
+		time.stop();
 	}
 	
 	@GET
@@ -65,9 +85,9 @@ public class StorageResource {
 	@Timed(name = "GET")
 	@Path("{key}")
 	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
-		
 		base(request, GetRequestState.class, s -> {
-			s.putDataForSelf(new VersionedValue(Version.INITIAL, new byte[0]));
+			replicaFinderWorker.send(s.getRequestId());
+			getWorker.send(s.getRequestId());
 		});
 		
 	}
@@ -78,7 +98,7 @@ public class StorageResource {
 	public void doPut(@Suspended AsyncResponse response, @BeanParam PutRequest request) {
 		
 		base(request, PutRequestState.class, s -> {
-			// TODO: version resolution, acknowledgments
+			replicaFinderWorker.send(s.getRequestId());
 			putWorker.send(s.getRequestId());
 		});
 		
