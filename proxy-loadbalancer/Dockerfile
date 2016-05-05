@@ -9,7 +9,6 @@ RUN pip install supervisor
 COPY ./supervisord.conf /etc/supervisord.conf
 
 # Rsyslog
-ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
 ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
 
 # Consul template
@@ -20,7 +19,8 @@ COPY ./template-files/haproxy.ctmpl /etc/consul-templates/
 ADD ./haproxy/etc/default/haproxy /etc/default/
 ADD ./haproxy/etc/haproxy/haproxy.cfg /etc/haproxy/
 
-EXPOSE 8080 443
+#EXPOSE 8080 443
 
 ENTRYPOINT ["/usr/local/bin/supervisord"]
+
 

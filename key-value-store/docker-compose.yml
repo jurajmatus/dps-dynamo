@@ -2,9 +2,6 @@ version: "2.0"
 services: 
   key-value-store:
     build: .
-    environment:
-      NODE1_IP: "${NODE1_IP}"
-      NODE2_IP: "${NODE2_IP}"
-      LOGGING_IP: "${LOGGING_IP}"
+    network_mode: "weave"
     restart: always
-    network_mode: "bridge"
+

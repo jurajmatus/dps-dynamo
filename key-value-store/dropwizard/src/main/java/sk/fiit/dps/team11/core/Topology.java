@@ -28,6 +28,11 @@ public class Topology {
 	
 	@PostConstruct
 	private void init() {
+		
+		//zisti pocet uzlov
+		
+		//
+		
 		try {
 			self = new DynamoNode(InetAddress.getLocalHost().getHostAddress(), new Random().nextLong());
 		} catch (UnknownHostException e) {

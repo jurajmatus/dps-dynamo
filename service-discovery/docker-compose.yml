@@ -1,13 +1,11 @@
-consul_server:
-  build: "."
-  container_name: "consul"
-  environment:
-    NODE1_IP: "${NODE1_IP}"
-    NODE2_IP: "${NODE2_IP}"
-    HOST_IP: "${HOST_IP}"
-  volumes:
-    - "/var/log/consul"
-    - "/etc/consul.d"
-  net: "host"
-  command: ["agent", "-server", "-bootstrap", "-node=${HOSTNAME}-consul-server", "-config-dir=/etc/consul.d", "-ui-dir=/ui", "-data-dir=/data", "-advertise=${HOST_IP}", "-client=${HOST_IP}", "-join=${NODE1_IP}", "-join=${NODE2_IP}"]
+version: '2'
+services:
+  consul_server:
+    build: "."
+    container_name: "consul-server"
+    hostname: "consul-server.weave.local"
+    volumes:
+      - "/var/log/consul"
+      - "/etc/consul.d"
+    network_mode: "weave"
 

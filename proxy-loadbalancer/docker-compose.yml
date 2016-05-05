@@ -1,11 +1,8 @@
-haproxy-consul-template:
-  build: .
-  container_name: haproxy
-  ports:
-    - "8080:8080"
-  #net: "host"
-  restart: always
-  environment:
-    NODE1_IP: "${NODE1_IP}"
-    NODE2_IP: "${NODE2_IP}"
-    LOGGING_IP: "${LOGGING_IP}"
+version: '2'
+services:
+  haproxy-consul-template:
+    build: .
+    container_name: haproxy
+    hostname: haproxy.weave.local
+    network_mode: "weave"
+    restart: always

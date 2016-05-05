@@ -12,7 +12,7 @@
         "SwarmDiscovery": "",
         "VBoxManager": {},
         "CPU": 1,
-        "Memory": 1024,
+        "Memory": 2048,
         "DiskSize": 20000,
         "Boot2DockerURL": "",
         "Boot2DockerImportVM": "",

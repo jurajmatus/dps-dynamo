@@ -1,0 +1,36 @@
+#Setup multihost manually
+host1$ weave launch host2
+host2$ weave launch host1
+
+#Working manual configuration
+sudo curl -L git.io/weave -o /usr/local/bin/weave
+sudo chmod a+x /usr/local/bin/weave
+weave launch
+...docker-compose all services
+weave expose
+weave dns-lookup consul-server.weave.local
+
+#Test if all nodes are registered in consul
+curl $(weave dns-lookup consul-server.weave.local):8500/v1/catalog/nodes | python -m json.tool
+curl $(weave dns-lookup consul-server.weave.local):8500/v1/catalog/services | python -m json.tool
+curl $(weave dns-lookup consul-server.weave.local):8500/v1/catalog/service/web | python -m json.tool
+curl $(weave dns-lookup consul-server.weave.local):8500/v1/catalog/service/dynamo | python -m json.tool
+curl $(weave dns-lookup consul-server.weave.local):8500/v1/health/service/dynamo | python -m json.tool
+###
+
+###consul agent functionality testing
+#-config-dir=/etc/consul.d
+$ yum install -y unzip net-tools
+$ docker run --net=weave -ti centos
+$ consul agent -data-dir=/tmp \
+-bind=$(ip a | grep "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
+-advertise=$(ip a | grep "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
+-client=$(ip a | grep "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
+-join=consul-server.weave
+$ consul agent -data-dir=/tmp \
+-bind=$(ifconfig | grep "ethwe0" -A2 | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
+-advertise=$(ifconfig | grep "ethwe0" -A2 | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
+-client=$(ifconfig | grep "ethwe0" -A2 | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
+-join=consul-server.weave
+##
+

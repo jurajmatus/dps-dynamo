@@ -6,6 +6,8 @@ public class DynamoNode implements Comparable<DynamoNode> {
 
 	private final String ip;
 	
+	//zoznam replikantov
+	//rozsah
 	private final long position;
 
 	public DynamoNode(@JsonProperty("ip") String ip, @JsonProperty("position") long position) {
@@ -19,7 +21,7 @@ public class DynamoNode implements Comparable<DynamoNode> {
 	}
 	
 	@JsonProperty
-	public long getPosition() {
+	public long getPosition(long hash) {
 		return position;
 	}
 

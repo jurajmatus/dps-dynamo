@@ -15,7 +15,6 @@ RUN pip install supervisor
     
 # Consul agent
 RUN curl -o /tmp/consul.zip https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip && unzip /tmp/consul.zip -d /usr/bin/
-ADD ./consul/init-consul.sh /usr/bin/init-consul.sh
 RUN mkdir -p /tmp/consul
 RUN mkdir -p /etc/consul.d
 
@@ -23,7 +22,6 @@ RUN mkdir -p /etc/consul.d
 COPY ./supervisord.conf /etc/supervisord.conf
 
 # Rsyslog
-ADD ./rsyslog/init-rsyslog.sh /usr/bin/init-rsyslog.sh
 ADD ./rsyslog/rsyslog.conf /etc/rsyslog.conf
     
 # Dropwizard

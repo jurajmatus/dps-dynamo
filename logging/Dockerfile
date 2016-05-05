@@ -53,7 +53,6 @@ ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Consul
 RUN curl -o /tmp/consul.zip https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip && unzip /tmp/consul.zip -d /usr/bin/
-ADD ./consul/init-consul.sh /usr/bin/init-consul.sh
 RUN mkdir -p /tmp/consul
 RUN mkdir -p /etc/consul.d
 ADD ./consul/config.json /etc/consul.d/
@@ -61,16 +60,15 @@ ADD ./consul-services/logging.json /etc/consul.d/
 
 # PORTS
 
-# Rsyslog
-EXPOSE 514/tcp
-EXPOSE 514/udp
+## Rsyslog
+#EXPOSE 514/tcp
+#EXPOSE 514/udp
 
-# Http frontends (Grafana, Loganalyzer)
-EXPOSE 80
+## Http frontends (Grafana, Loganalyzer)
+#EXPOSE 80
 
-# Graphite listener
-EXPOSE 2003
-
+## Graphite listener
+#EXPOSE 2003
 
 
 # COMMAND TO RUN

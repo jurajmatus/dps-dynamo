@@ -1,12 +1,8 @@
-logging:
-  build: .
-  container_name: logging
-  ports:
-    - "80:80"
-    - "2003:2003"
-    - "514:514"
-    - "514:514/udp"
-  restart: always
-  environment:
-    NODE1_IP: "${NODE1_IP}"
-    NODE2_IP: "${NODE2_IP}"
+version: '2'
+services:
+  logging-server:
+    build: .
+    container_name: logging-server
+    hostname: logging-server.weave.local
+    network_mode: "weave"
+    restart: always
