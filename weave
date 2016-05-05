@@ -1,3 +1,19 @@
+#install docker-machine
+curl -L https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \
+chmod +x /usr/local/bin/docker-machine
+
+#install docker-compose
+curl -L https://github.com/docker/compose/releases/download/1.7.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+#
+docker-machine create\
+ -d virtualbox\
+ master
+docker-machine create\
+ -d virtualbox\
+ slave
+
 #Setup multihost manually
 host1$ weave launch host2
 host2$ weave launch host1
