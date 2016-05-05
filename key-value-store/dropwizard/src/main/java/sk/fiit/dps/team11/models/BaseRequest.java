@@ -3,32 +3,34 @@ package sk.fiit.dps.team11.models;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.AsyncResponse;
 
-import sk.fiit.dps.team11.core.RequestState;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-abstract public class BaseRequest<T extends RequestState<U>, U> {
+abstract public class BaseRequest {
 
 	private final byte[] key;
 
-	private final AsyncResponse response;
+	private AsyncResponse response;
 	
-	private final HttpServletRequest servletRequest;
-	
-	private T requestState = null;
+	private HttpServletRequest servletRequest;
 
-	public BaseRequest(byte[] key, AsyncResponse response, HttpServletRequest servletRequest) {
+	public BaseRequest(byte[] key) {
 		this.key = key;
-		this.response = response;
-		this.servletRequest = servletRequest;
 	}
 
+	protected void setResponse(AsyncResponse response) {
+		this.response = response;
+	}
+
+	@JsonIgnore
 	public AsyncResponse getResponse() {
 		return response;
 	}
-	
-	public T getRequestState() {
-		return requestState;
+
+	protected void setServletRequest(HttpServletRequest servletRequest) {
+		this.servletRequest = servletRequest;
 	}
 
+	@JsonIgnore
 	public HttpServletRequest getServletRequest() {
 		return servletRequest;
 	}
@@ -37,13 +39,7 @@ abstract public class BaseRequest<T extends RequestState<U>, U> {
 		return key;
 	}
 	
-	public T createRequestState(int numReplicas) {
-		requestState = _createRequestState(numReplicas);
-		return requestState;
-	}
-	
-	abstract public T _createRequestState(int numReplicas);
-	
+	@JsonIgnore
 	abstract public String getLabel();
 
 }

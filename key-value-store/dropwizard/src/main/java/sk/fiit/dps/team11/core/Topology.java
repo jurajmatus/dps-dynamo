@@ -2,7 +2,7 @@ package sk.fiit.dps.team11.core;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,18 +13,31 @@ import javax.inject.Inject;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
+import sk.fiit.dps.team11.config.TopConfiguration;
+
 public class Topology {
 	
 	private final static HashFunction MD5 = Hashing.md5();
+	
+	@Inject
+	private ScheduledExecutorService execService;
+	
+	@Inject
+	private TopConfiguration conf;
+	
+	private DynamoNode self;
+	
+	
 	
 	private long getPositionInChord(byte[] key) {
 		return MD5.hashBytes(key).asLong();
 	}
 	
-	@Inject
-	private ScheduledExecutorService execService;
+	private int numReplicas() {
+		return conf.getReliability().getNumReplicas();
+	}
 	
-	private DynamoNode self;
+	
 	
 	@PostConstruct
 	private void init() {
@@ -69,7 +82,8 @@ public class Topology {
 		long hash = getPositionInChord(key);
 		
 		// Stub implementation - redirect will be to loopback
-		return Arrays.asList(self);
+		// Just for debugging - final implementation should not contain self
+		return Collections.nCopies(numReplicas(), self);
 	}
 	
 	// TODO - polling, notifications about new nodes / nodes removals

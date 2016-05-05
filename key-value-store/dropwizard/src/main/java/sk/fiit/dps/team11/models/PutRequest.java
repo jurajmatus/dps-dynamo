@@ -2,8 +2,6 @@ package sk.fiit.dps.team11.models;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Context;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -11,10 +9,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ByteArraySerializer;
 
 import sk.fiit.dps.team11.core.ByteArrayDeserializer;
-import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.Version;
 
-public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
+public class PutRequest extends BaseRequest {
 	
 	private final byte[] value;
 	
@@ -25,19 +22,12 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	public PutRequest(@JsonProperty("key") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] key,
 			@JsonProperty("value") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] value,
 			@JsonProperty("fromVersion") Version fromVersion,
-			@Suspended AsyncResponse response,
-			@Context HttpServletRequest servletRequest,
 			@JsonProperty("minNumWrites") int minNumWrites) {
 		
-		super(key, response, servletRequest);
+		super(key);
 		this.value = value;
 		this.fromVersion = fromVersion == null ? Version.INITIAL : fromVersion;
 		this.minNumWrites = minNumWrites;
-	}
-
-	@Override
-	public PutRequestState _createRequestState(int numReplicas) {
-		return new PutRequestState(getResponse(), minNumWrites, numReplicas);
 	}
 
 	@Override
@@ -66,6 +56,16 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 	@JsonProperty
 	public int getMinNumWrites() {
 		return minNumWrites;
+	}
+	
+	@Override
+	public void setResponse(AsyncResponse response) {
+		super.setResponse(response);
+	}
+	
+	@Override
+	public void setServletRequest(HttpServletRequest servletRequest) {
+		super.setServletRequest(servletRequest);
 	}
 	
 }
