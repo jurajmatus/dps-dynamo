@@ -35,7 +35,7 @@ public class StorageExecutor {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(StorageExecutor.class);
 
-	private final BaseRequest<?, ?> request;
+	private final BaseRequest request;
 	
 	@Inject
 	private RequestStates states;
@@ -48,18 +48,16 @@ public class StorageExecutor {
 	
 	private final static ObjectMapper MAPPER = new ObjectMapper();
 
-	public static StorageExecutor create(InjectManager injectManager, BaseRequest<?, ?> request) {
+	public static StorageExecutor create(InjectManager injectManager, BaseRequest request) {
 		return injectManager.register(new StorageExecutor(request));
 	}
 	
-	private StorageExecutor(BaseRequest<?, ?> request) {
+	private StorageExecutor(BaseRequest request) {
 		this.request = request;
 	}
 	
-	private void handleMy(Runnable handler) {
-		RequestState<?> state = request.getRequestState();
+	private void handleMy(RequestState<? extends BaseRequest> state, Runnable handler) {
 		states.put(state.getRequestId(), state);
-		
 		handler.run();
 	}
 	
@@ -121,21 +119,20 @@ public class StorageExecutor {
 		});
 	}
 	
-	public void execute(Runnable handler) {
-		request.createRequestState(conf.getReliability().getNumReplicas());
+	public void execute(RequestState<? extends BaseRequest> state, Runnable handler) {
 		
-		LOGGER.info("Received GET request with id {}", request.getRequestState().getRequestId());
+		LOGGER.info("Received GET request with id {}", state.getRequestId());
 		
 		AsyncResponse response = request.getResponse();
 		response.setTimeout(conf.getReliability().getResponseTimeoutMillis(), TimeUnit.MILLISECONDS);
 		response.setTimeoutHandler(resp -> {
 			resp.cancel();
-			states.forceRemove(request.getRequestState().getRequestId());
+			states.forceRemove(state.getRequestId());
 		});
 		
 		// The key is in this node's responsibility - it will become the coordinator
 		if (topology.isMy(request.getKey())) {
-			handleMy(handler);
+			handleMy(state, handler);
 		}
 		
 		// The key is not in this node's responsibility - the request will be redirected to the responsible node

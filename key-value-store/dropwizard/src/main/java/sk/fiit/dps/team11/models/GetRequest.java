@@ -12,9 +12,7 @@ import org.glassfish.jersey.internal.util.Base64;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import sk.fiit.dps.team11.core.GetRequestState;
-
-public class GetRequest extends BaseRequest<GetRequestState, GetResponse> {
+public class GetRequest extends BaseRequest {
 	
 	private final int minNumReads;
 	
@@ -25,11 +23,6 @@ public class GetRequest extends BaseRequest<GetRequestState, GetResponse> {
 		
 		super(Base64.decode(key.getBytes()), response, servletRequest);
 		this.minNumReads = minNumReads;
-	}
-
-	@Override
-	public GetRequestState _createRequestState(int numReplicas) {
-		return new GetRequestState(getResponse(), getKey(), minNumReads, numReplicas);
 	}
 
 	@Override

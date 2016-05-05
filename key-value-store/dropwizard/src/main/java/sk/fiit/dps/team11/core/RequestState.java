@@ -12,39 +12,38 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.container.AsyncResponse;
 
+import sk.fiit.dps.team11.models.BaseRequest;
 
-abstract public class RequestState<T> {
+
+abstract public class RequestState<T extends BaseRequest> {
 	
 	private final UUID requestId;
-	
-	private final byte[] key;
 	
 	private final AsyncResponse response;
 	
 	private final AtomicBoolean responseSent = new AtomicBoolean(false);
 	
-	private final int minimum;
-	
 	private final int all;
+	
+	private final T request;
 	
 	private Optional<Object> dataFromSelf = Optional.empty();
 	
 	private final Map<DynamoNode, Optional<Object>> data = new TreeMap<>();
 
-	public RequestState(AsyncResponse response, byte[] key, int minimum, int all) {
+	public RequestState(AsyncResponse response, int all, T request) {
 		this.requestId = UUID.randomUUID();
-		this.key = key;
 		this.response = response;
-		this.minimum = minimum;
 		this.all = all;
+		this.request = request;
 	}
 	
 	public UUID getRequestId() {
 		return requestId;
 	}
-	
-	public byte[] getKey() {
-		return key;
+
+	public T getRequest() {
+		return request;
 	}
 
 	public void addNodes(Collection<DynamoNode> nodes) {
@@ -136,20 +135,22 @@ abstract public class RequestState<T> {
 		}
 		return state;
 	}
+	
+	abstract protected int minimum();
 
 	public boolean isReady() {
-		return getState() >= minimum;
+		return getState() >= Math.min(all, minimum());
 	}
 	
 	public boolean isDone() {
 		return getState() >= all;
 	}
 	
-	protected abstract T doRespond();
+	protected abstract Object provideResponse();
 	
 	protected void respond() {
 		if (!responseSent.getAndSet(true)) {
-			response.resume(doRespond());
+			response.resume(provideResponse());
 		}
 	}
 

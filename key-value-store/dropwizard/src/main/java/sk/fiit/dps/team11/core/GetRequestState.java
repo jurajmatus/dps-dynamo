@@ -4,13 +4,14 @@ import java.util.List;
 
 import javax.ws.rs.container.AsyncResponse;
 
+import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.models.GetResponse;
 import sk.fiit.dps.team11.models.VersionedValue;
 
-public class GetRequestState extends RequestState<GetResponse> {
+public class GetRequestState extends RequestState<GetRequest> {
 
-	public GetRequestState(AsyncResponse response, byte[] key, int minimum, int all) {
-		super(response, key, minimum, all);
+	public GetRequestState(AsyncResponse response, int all, GetRequest request) {
+		super(response, all, request);
 	}
 	
 	public boolean putDataForNode(DynamoNode node, VersionedValue data) {
@@ -26,7 +27,13 @@ public class GetRequestState extends RequestState<GetResponse> {
 	}
 
 	@Override
-	protected GetResponse doRespond() {
+	protected int minimum() {
+		return getRequest().getMinNumReads();
+	}
+
+	@Override
+	protected Object provideResponse() {
+		// TODO
 		return new GetResponse("TESTING KEY".getBytes(),
 					new VersionedValue(Version.INITIAL, "ENCODED STRING".getBytes()));
 	}

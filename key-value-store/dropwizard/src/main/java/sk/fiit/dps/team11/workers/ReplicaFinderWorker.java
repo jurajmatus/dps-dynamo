@@ -36,7 +36,7 @@ public class ReplicaFinderWorker {
 	ActiveMQSender getReplicator;
 	
 	private void handleState(RequestState<?> state) {
-		List<DynamoNode> nodesForKey = topology.nodesForKey(state.getKey());
+		List<DynamoNode> nodesForKey = topology.nodesForKey(state.getRequest().getKey());
 		state.addNodes(nodesForKey);
 		
 		ActiveMQSender nextPhase = (state instanceof GetRequestState) ? getReplicator

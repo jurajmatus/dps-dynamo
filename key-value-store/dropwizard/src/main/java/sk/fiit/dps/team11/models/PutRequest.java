@@ -11,10 +11,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ByteArraySerializer;
 
 import sk.fiit.dps.team11.core.ByteArrayDeserializer;
-import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.Version;
 
-public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
+public class PutRequest extends BaseRequest {
 	
 	private final byte[] value;
 	
@@ -33,11 +32,6 @@ public class PutRequest extends BaseRequest<PutRequestState, PutResponse> {
 		this.value = value;
 		this.fromVersion = fromVersion == null ? Version.INITIAL : fromVersion;
 		this.minNumWrites = minNumWrites;
-	}
-
-	@Override
-	public PutRequestState _createRequestState(int numReplicas) {
-		return new PutRequestState(getResponse(), getKey(), minNumWrites, numReplicas);
 	}
 
 	@Override
