@@ -87,7 +87,7 @@ public class StorageResource {
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@Timed(name = "PUT")
-	public void doPut(@Suspended AsyncResponse response, @BeanParam PutRequest request) {
+	public void doPut(@Suspended AsyncResponse response, PutRequest request) {
 		
 		base(new PutRequestState(response, numReplicas(), request), s -> {
 			replicaFinderWorker.send(s.getRequestId());

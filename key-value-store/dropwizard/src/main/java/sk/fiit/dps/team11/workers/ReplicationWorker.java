@@ -17,6 +17,11 @@ import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.RequestStates;
+import sk.fiit.dps.team11.core.Topology;
+import sk.fiit.dps.team11.models.ByteArray;
+import sk.fiit.dps.team11.models.PutRequest;
+import sk.fiit.dps.team11.models.RemoteGetMessage;
+import sk.fiit.dps.team11.models.RemotePutMessage;
 import sk.fiit.dps.team11.workers.WrappedMethodWorker.MQListener;
 
 public class ReplicationWorker {
@@ -28,6 +33,9 @@ public class ReplicationWorker {
 	
 	@MQSender(topic = "timeout-check")
 	ActiveMQSender timeoutCheckerWorker;
+	
+	@Inject
+	Topology topology;
 	
 	@Inject
 	MQ mq;
@@ -50,8 +58,12 @@ public class ReplicationWorker {
 	public void sendPutReplicas(UUID requestId) {
 		
 		states.withState(requestId, PutRequestState.class, s -> sendToAllNodes(s, "put", () -> {
-			// TODO - remote put message
-			return null;
+			
+			PutRequest request = s.getRequest();
+			
+			return new RemotePutMessage(topology.self().getIp(), requestId,
+				new ByteArray(request.getKey()), request.getFromVersion(), new ByteArray(request.getValue()));
+			
 		}), () -> LOGGER.warn("Trying to send replicas for inexistent state: {}", requestId));
 		
 	}
@@ -60,8 +72,10 @@ public class ReplicationWorker {
 	public void coordinateGetReplicas(UUID requestId) {
 		
 		states.withState(requestId, PutRequestState.class, s -> sendToAllNodes(s, "get", () -> {
-			// TODO - remote get message
-			return null;
+			
+			return new RemoteGetMessage(topology.self().getIp(), requestId,
+				new ByteArray(s.getRequest().getKey()));
+			
 		}), () -> LOGGER.warn("Trying to get replicas for inexistent state: {}", requestId));
 		
 	}

@@ -1,13 +1,6 @@
-Classes:
-* RemotePutMessage
-* RemoteGetMessage
-
 Data manipulation:
 * get
 * put
-
-Replication:
-* acknowledgements
 
 Version resolution:
 * basic implementation
