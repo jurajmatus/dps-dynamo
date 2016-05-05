@@ -3,6 +3,7 @@ package sk.fiit.dps.team11.resources;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -87,7 +88,11 @@ public class StorageResource {
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@Timed(name = "PUT")
-	public void doPut(@Suspended AsyncResponse response, PutRequest request) {
+	public void doPut(@Suspended AsyncResponse response,
+		@javax.ws.rs.core.Context HttpServletRequest servletRequest, PutRequest request) {
+		
+		request.setResponse(response);
+		request.setServletRequest(servletRequest);
 		
 		base(new PutRequestState(response, numReplicas(), request), s -> {
 			replicaFinderWorker.send(s.getRequestId());

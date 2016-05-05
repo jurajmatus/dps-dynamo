@@ -2,8 +2,6 @@ package sk.fiit.dps.team11.models;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Context;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -24,11 +22,9 @@ public class PutRequest extends BaseRequest {
 	public PutRequest(@JsonProperty("key") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] key,
 			@JsonProperty("value") @JsonDeserialize(using = ByteArrayDeserializer.class) byte[] value,
 			@JsonProperty("fromVersion") Version fromVersion,
-			@Suspended AsyncResponse response,
-			@Context HttpServletRequest servletRequest,
 			@JsonProperty("minNumWrites") int minNumWrites) {
 		
-		super(key, response, servletRequest);
+		super(key);
 		this.value = value;
 		this.fromVersion = fromVersion == null ? Version.INITIAL : fromVersion;
 		this.minNumWrites = minNumWrites;
@@ -60,6 +56,16 @@ public class PutRequest extends BaseRequest {
 	@JsonProperty
 	public int getMinNumWrites() {
 		return minNumWrites;
+	}
+	
+	@Override
+	public void setResponse(AsyncResponse response) {
+		super.setResponse(response);
+	}
+	
+	@Override
+	public void setServletRequest(HttpServletRequest servletRequest) {
+		super.setServletRequest(servletRequest);
 	}
 	
 }

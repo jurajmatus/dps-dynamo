@@ -41,14 +41,15 @@ public class TestStorage {
 	@Before
 	public void prepare() {
 		target = ClientBuilder.newClient()
-			.property(ClientProperties.CONNECT_TIMEOUT, 5000)
+			.property(ClientProperties.CONNECT_TIMEOUT, 2000)
+			.property(ClientProperties.READ_TIMEOUT, 2000)
 			.target("http://localhost:8080/storage");
 	}
 
 	@Test
 	public void testPut() throws Exception {
 		
-		PutRequest entity = new PutRequest(KEYS.get(0), VALUES.get(0), Version.INITIAL, null, null, 1);
+		PutRequest entity = new PutRequest(KEYS.get(0), VALUES.get(0), Version.INITIAL, 1);
 		
 		Response response = target.request().buildPut(Entity.entity(entity, MediaType.APPLICATION_JSON)).invoke();
 		

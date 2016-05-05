@@ -21,8 +21,10 @@ public class GetRequest extends BaseRequest {
 			@Context HttpServletRequest servletRequest,
 			@QueryParam("minNumReads") @DefaultValue("1") int minNumReads) {
 		
-		super(Base64.decode(key.getBytes()), response, servletRequest);
+		super(Base64.decode(key.getBytes()));
 		this.minNumReads = minNumReads;
+		this.setResponse(response);
+		this.setServletRequest(servletRequest);
 	}
 
 	@Override
