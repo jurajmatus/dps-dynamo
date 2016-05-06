@@ -33,9 +33,11 @@ eval $(docker-machine env master)
 weave launch
 eval "$(weave env)"
 docker-compose -f master.yml up
+```
 
-# ...after work is done
-
+Cleaning Master
+```bash
+# In other shell than it was deployed in
 docker-compose -f master.yml rm --all
 weave stop
 weave reset
@@ -49,9 +51,10 @@ eval $(docker-machine env slave)
 weave launch $(docker-machine ip master)
 eval "$(weave env)"
 docker-compose -f slave.yml scale key-value-store=2
+```
 
-# ...after work is done
-
+Cleaning Slave
+```bash
 docker-compose -f slave.yml scale key-value-store=0
 weave stop
 weave reset
