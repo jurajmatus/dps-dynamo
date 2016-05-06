@@ -11,8 +11,11 @@
 
 ### Prerequisites
 
-To run this application, docker, docker-compose and docker-machine are required.
-Preinstallation scripts are written in bash.
+To run this application, you need to have basic docker tooling installed:
+* [docker](https://docs.docker.com/engine/installation/)
+* [docker-compose](https://docs.docker.com/compose/install/)
+* [docker-machine](https://docs.docker.com/machine/install-machine/)
+* [weave](https://github.com/weaveworks/weave#installation)
 
 ### Build & run
 
@@ -23,54 +26,36 @@ git clone https://github.com/jurajmatus/dps-dynamo.git
 cd dps-dynamo
 ```
 
-Install docker-machine
-```bash
-curl -L https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \
-chmod +x /usr/local/bin/docker-machine
-```
-
-Install docker-compose
-```bash
-curl -L https://github.com/docker/compose/releases/download/1.7.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-```
-
-Install weave network plugin
-```bash
-sudo curl -L git.io/weave -o /usr/local/bin/weave
-sudo chmod a+x /usr/local/bin/weave
-```
-
 Deploying Master
 ```bash
-[$shell1] docker-machine create\
- -d virtualbox\
- master
-[$shell1] eval $(docker-machine env master)
-[$shell1] weave launch
-[$shell1] eval "$(weave env)"
-[$shell1] docker-compose -f master.yml up
-...after work is done
-[$shell2] docker-compose -f master.yml rm --all
-[$shell2] weave stop
-[$shell2] weave reset
-[$shell2] eval "$(weave env --restore)"
+docker-machine create -d virtualbox master
+eval $(docker-machine env master)
+weave launch
+eval "$(weave env)"
+docker-compose -f master.yml up
+
+# ...after work is done
+
+docker-compose -f master.yml rm --all
+weave stop
+weave reset
+eval "$(weave env --restore)"
 ```
 
 Deploying Slave
 ```bash
-[$shell2] docker-machine create\
- -d virtualbox\
- slave
-[$shell2] eval $(docker-machine env slave)
-[$shell2] weave launch $(docker-machine ip master)
-[$shell2] eval "$(weave env)"
-[$shell2] docker-compose -f slave.yml scale key-value-store=2
-...after work is done
-[$shell2] docker-compose -f slave.yml scale key-value-store=0
-[$shell2] weave stop
-[$shell2] weave reset
-[$shell2] eval "$(weave env --restore)"
+docker-machine create -d virtualbox slave
+eval $(docker-machine env slave)
+weave launch $(docker-machine ip master)
+eval "$(weave env)"
+docker-compose -f slave.yml scale key-value-store=2
+
+# ...after work is done
+
+docker-compose -f slave.yml scale key-value-store=0
+weave stop
+weave reset
+eval "$(weave env --restore)"
 ```
 
 ### API
@@ -91,6 +76,13 @@ Parameters:
 * _key_ : String - BASE64 encoded byte array
 * _minNumReads_ : Integer - minimal number of replicas to acknowledge the request so that response could be sent
 
+Response body:
+
+* _key_ : String - BASE64 encoded byte array
+* _value_ : Object
+  * _version_ : String - version string
+  * _values_ : Array[String] - BASE64 encoded byte arrays, one for each unresolved version
+
 #### Put
 
 URL: /storage/
@@ -105,6 +97,14 @@ Body:
 * _value_ : String - BASE64 encoded byte array
 * _fromVersion_ : String - version string, exactly as received from the last get, or empty
 * _minNumWrites_ : Integer - minimal number of replicas to acknowledge the request so that write was considered complete
+
+Response body:
+
+* _success_ : Boolean - success of operation. Will be false if old value of _fromVersion_ is used, or if any other error occurs
+
+#### Delete
+
+There is no method to specifically delete an entry. To do so, Put method where value is empty string has to be issued.
 
 ## Infrastructure
 
