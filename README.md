@@ -46,15 +46,20 @@ Deploying Master
 [$shell1] docker-machine create\
  -d virtualbox\
  master
+[$shell1] docker-machine ssh master
+[$shell1] sudo -i
+[$shell1] echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
 [$shell1] eval $(docker-machine env master)
 [$shell1] weave launch
 [$shell1] eval "$(weave env)"
+[$shell1] docker-compose -f master.yml build
 [$shell1] docker-compose -f master.yml up
-...after work is done
-[$shell2] docker-compose -f master.yml rm --all
-[$shell2] weave stop
-[$shell2] weave reset
-[$shell2] eval "$(weave env --restore)"
+[$shell1] weave expose
+#...after work is done
+[$shell1] docker-compose -f master.yml rm --all
+[$shell1] weave stop
+[$shell1] weave reset
+[$shell1] eval "$(weave env --restore)"
 ```
 
 Deploying Slave
@@ -62,16 +67,28 @@ Deploying Slave
 [$shell2] docker-machine create\
  -d virtualbox\
  slave
+[$shell2] docker-machine ssh slave
+[$shell2] sudo -i
+[$shell2] echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
 [$shell2] eval $(docker-machine env slave)
 [$shell2] weave launch $(docker-machine ip master)
 [$shell2] eval "$(weave env)"
+[$shell2] docker-compose -f slave.yml build
 [$shell2] docker-compose -f slave.yml scale key-value-store=2
-...after work is done
+[$shell2] weave expose
+#...after work is done
 [$shell2] docker-compose -f slave.yml scale key-value-store=0
 [$shell2] weave stop
 [$shell2] weave reset
 [$shell2] eval "$(weave env --restore)"
 ```
+
+Setup Host and test
+ip r add 10.32.0.0/12 dev vboxnet0
+curl $(weave dns-lookup consul-server):8500/v1/catalog/nodes | python -m json.tool
+curl $(weave dns-lookup consul-server):8500/v1/health/service/dynamo | python -m json.tool
+curl $(weave dns-lookup haproxy):8080/check_connectivity
+open logging in web browser: http://10.32.0.3/login, http://10.32.0.3/loganalyzer
 
 ### API
 

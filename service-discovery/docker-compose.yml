@@ -1,6 +1,6 @@
 version: '2'
 services:
-  consul_server:
+  consul-server:
     build: "."
     container_name: "consul-server"
     hostname: "consul-server.weave.local"

@@ -36,14 +36,8 @@ public class CheckConnectivityResource {
 		
 		ObjectNode ret = JsonNodeFactory.instance.objectNode();
 		
-		String ip = System.getenv("NODE1_IP");
-		if (ip == null) {
-			LOGGER.error("Unknown address of service discovery node");
-			return Response.serverError().build();
-		}
-		
 		WebTarget target = ClientBuilder.newClient()
-				.target(String.format("http://%s:8500/v1/health/service/dynamo", ip));
+				.target("http://consul-server:8500/v1/health/service/dynamo");
 
 		Response response = target.request().get();
 		

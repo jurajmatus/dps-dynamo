@@ -9,7 +9,7 @@ services:
      hostname: "consul-server.weave.local"
      network_mode: "weave"
      restart: always
-  haproxy-consul-template:
+  haproxy:
      build: ../proxy-loadbalancer
      container_name: "haproxy"
      hostname: "haproxy.weave.local"

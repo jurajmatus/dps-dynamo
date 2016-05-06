@@ -1,6 +1,6 @@
 version: '2'
 services:
-  haproxy-consul-template:
+  haproxy:
     build: .
     container_name: haproxy
     hostname: haproxy.weave.local
