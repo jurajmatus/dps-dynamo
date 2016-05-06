@@ -1,3 +1,4 @@
+#!/bin/bash
 
 if [ -z $(docker-machine inspect master | grep 'Host does not exist') ] ; then
    docker-machine rm master

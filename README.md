@@ -21,15 +21,56 @@ Download the repository and create docker machines:
 ```bash
 git clone https://github.com/jurajmatus/dps-dynamo.git
 cd dps-dynamo
-sh docker-machine/create-machines.sh
 ```
 
-Afterwards, you can run them in separate terminal sesions:
+Install docker-machine
 ```bash
-sh docker-machine/run-machine.sh master
+curl -L https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \
+chmod +x /usr/local/bin/docker-machine
 ```
+
+Install docker-compose
 ```bash
-sh docker-machine/run-machine.sh slave
+curl -L https://github.com/docker/compose/releases/download/1.7.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+```
+
+Install weave network plugin
+```bash
+sudo curl -L git.io/weave -o /usr/local/bin/weave
+sudo chmod a+x /usr/local/bin/weave
+```
+
+Deploying Master
+```bash
+[$shell1] docker-machine create\
+ -d virtualbox\
+ master
+[$shell1] eval $(docker-machine env master)
+[$shell1] weave launch
+[$shell1] eval "$(weave env)"
+[$shell1] docker-compose -f master.yml up
+...after work is done
+[$shell2] docker-compose -f master.yml rm --all
+[$shell2] weave stop
+[$shell2] weave reset
+[$shell2] eval "$(weave env --restore)"
+```
+
+Deploying Slave
+```bash
+[$shell2] docker-machine create\
+ -d virtualbox\
+ slave
+[$shell2] eval $(docker-machine env slave)
+[$shell2] weave launch $(docker-machine ip master)
+[$shell2] eval "$(weave env)"
+[$shell2] docker-compose -f slave.yml scale key-value-store=2
+...after work is done
+[$shell2] docker-compose -f slave.yml scale key-value-store=0
+[$shell2] weave stop
+[$shell2] weave reset
+[$shell2] eval "$(weave env --restore)"
 ```
 
 ### API

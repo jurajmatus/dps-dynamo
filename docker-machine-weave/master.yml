@@ -1,6 +1,6 @@
 version: '2'
 services: 
-  consul_server:
+  consul-server:
      build: ../service-discovery
      volumes:
         - "/var/log/consul"
@@ -15,10 +15,10 @@ services:
      hostname: "haproxy.weave.local"
      network_mode: "weave"
      restart: always
-  logging:
+  logging-server:
      build: ../logging
      restart: always
-     container_name: "logging"
-     hostname: "logging.weave.local"
+     container_name: "logging-server"
+     hostname: "logging-server.weave.local"
      network_mode: "weave"
       

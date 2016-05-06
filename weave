@@ -6,18 +6,45 @@ chmod +x /usr/local/bin/docker-machine
 curl -L https://github.com/docker/compose/releases/download/1.7.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
-#
-docker-machine create\
+#install weave
+sudo curl -L git.io/weave -o /usr/local/bin/weave
+sudo chmod a+x /usr/local/bin/weave
+
+#DOCKER-MACHINE START COMMANDS -- DEPLOY
+[$shell1] docker-machine create\
  -d virtualbox\
  master
-docker-machine create\
+[$shell1] eval $(docker-machine env master)
+[$shell1] weave launch
+[$shell1] eval "$(weave env)"
+[$shell1] docker-compose -f master.yml up
+...after work is done
+[$shell2] docker-compose -f master.yml rm --all
+[$shell2] weave stop
+[$shell2] weave reset
+[$shell2] eval "$(weave env --restore)"
+
+
+[$shell2] docker-machine create\
  -d virtualbox\
  slave
+[$shell2] eval $(docker-machine env slave)
+[$shell2] weave launch $(docker-machine ip master)
+[$shell2] eval "$(weave env)"
+[$shell2] docker-compose -f slave.yml scale key-value-store=2
+...after work is done
+[$shell2] docker-compose -f slave.yml scale key-value-store=0
+[$shell2] weave stop
+[$shell2] weave reset
+[$shell2] eval "$(weave env --restore)"
+#####
 
-#Setup multihost manually
-host1$ weave launch host2
-host2$ weave launch host1
 
+
+
+
+
+###############################################################################
 #Working manual configuration
 sudo curl -L git.io/weave -o /usr/local/bin/weave
 sudo chmod a+x /usr/local/bin/weave
@@ -49,4 +76,3 @@ $ consul agent -data-dir=/tmp \
 -client=$(ifconfig | grep "ethwe0" -A2 | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2) \
 -join=consul-server.weave
 ##
-

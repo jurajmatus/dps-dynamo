@@ -1,21 +1,24 @@
 #!/bin/bash
 
-echo "/bin/consul agent -server -bootstrap \
+echo "$(ip a)"
+
+echo "/bin/consul agent -server -bootstrap-expect 1 \
  -node="consul-server"\
  -config-dir="/etc/consul.d"\
  -ui-dir="/ui"\
  -data-dir="/data"\
- -bind="$(ip a | grep "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2)"\
- -advertise="$(ip a | grep "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2)"\
- -client="$(ip a | grep "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2)""
+ -bind="$(ip a | grep -E -A5 "ethwe@.*" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -advertise="$(ip a | grep -E -A5 "ethwe@.*" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -client="$(ip a | grep -E -A5 "ethwe@.*" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)""
 
+rm -rf /data/*
 
-/bin/consul agent -server -bootstrap \
+/bin/consul agent -server -bootstrap-expect 1 \
  -node="consul-server"\
  -config-dir="/etc/consul.d"\
  -ui-dir="/ui"\
  -data-dir="/data"\
- -bind="$(ip a | grep "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2)"\
- -advertise="$(ip a | grep "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2)"\
- -client="$(ip a | grep "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2)"
+ -bind="$(ip a | grep -E -A5 "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -advertise="$(ip a | grep -E -A5 "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -client="$(ip a | grep -E -A5 "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"
  
