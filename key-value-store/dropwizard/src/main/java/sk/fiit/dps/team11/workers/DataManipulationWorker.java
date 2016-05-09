@@ -2,6 +2,7 @@ package sk.fiit.dps.team11.workers;
 
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.inject.Inject;
 
@@ -12,6 +13,7 @@ import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
+import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.MQ;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestStates;
@@ -44,6 +46,9 @@ public class DataManipulationWorker {
 	@Inject
 	VersionResolution versionResolution;
 	
+	@Inject
+	ScheduledExecutorService execService;
+	
 	@MQSender(topic = "find-for-key")
 	private ActiveMQSender replicaFinderWorker;
 
@@ -61,7 +66,12 @@ public class DataManipulationWorker {
 				
 				replicaFinderWorker.send(s.getRequestId());
 				boolean success = db.put(req.getKey(), valueToWrite, oldValue);
-				s.acknowledgeForSelf(success);
+				
+				if (success) {				
+					s.acknowledgeForSelf(success);
+				} else {
+					execService.execute(() -> receiveLocalPut(requestId));
+				}
 				
 			}, isValueCurrent -> {
 				s.respondNow(isValueCurrent);
@@ -98,28 +108,40 @@ public class DataManipulationWorker {
 			
 			s.acknowledgeForNode(topology.nodeForIp(putAck.getFrom()), putAck.isSuccess());
 			
-		}, () -> LOGGER.warn("Trying to receive acknowledgement for inexistent state: {}", putAck.getRequestId()));
+		}, () -> LOGGER.warn("Trying to receive put acknowledgement for inexistent state: {}", putAck.getRequestId()));
 		
 	}
 
 	@MQListener(queue = "get")
 	public void receiveLocalGet(UUID requestId) {
 		
-		// TODO
+		states.withState(requestId, GetRequestState.class, s -> {
+			
+			VersionedValue value = db.get(s.getRequest().getKey());
+			s.putDataForSelf(value);
+			
+		}, () -> LOGGER.warn("Trying to continue getting inexistent state: {}", requestId));
 		
 	}
 
 	@MQListener(queue = "get-replica")
 	public void receiveRemoveGet(RemoteGetMessage getMessage) {
 		
-		// TODO
+		VersionedValue value = db.get(getMessage.getKey().data);
+		
+		mq.send(getMessage.getFrom(), "get-ack", new RemoteGetAcknowledgement(
+				topology.self().getIp(), getMessage.getRequestId(), value));
 		
 	}
 
 	@MQListener(queue = "get-ack")
 	public void receiveGetAck(RemoteGetAcknowledgement getAck) {
 		
-		// TODO
+		states.withState(getAck.getRequestId(), GetRequestState.class, s -> {
+			
+			s.putDataForNode(topology.nodeForIp(getAck.getFrom()), getAck.getValue());
+			
+		}, () -> LOGGER.warn("Trying to receive get acknowledgement for inexistent state: {}", getAck.getRequestId()));
 		
 	}
 
