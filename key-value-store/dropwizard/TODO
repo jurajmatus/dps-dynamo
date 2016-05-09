@@ -1,11 +1,6 @@
 Execution:
 * get
 
-Data manipulation:
-* get
-* put
-* transaction
-
 Version:
 * basic implementation
 

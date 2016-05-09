@@ -1,10 +1,13 @@
 package sk.fiit.dps.team11.core;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
+import java.util.Arrays;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.primitives.Bytes;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
@@ -13,6 +16,7 @@ import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
+import com.sleepycat.je.Transaction;
 
 import io.dropwizard.lifecycle.Managed;
 import sk.fiit.dps.team11.models.VersionedValue;
@@ -22,6 +26,8 @@ public class DatabaseAdapter implements Managed {
 	private Environment env;
 	
 	private Database databaseStore;
+	
+	private final static ObjectMapper MAPPER = new ObjectMapper();
 	
 	@Override
 	public void start() throws Exception {
@@ -58,41 +64,51 @@ public class DatabaseAdapter implements Managed {
 	}
 	
 	public VersionedValue get(byte[] key) {
-		try {
-			getStore();
-			
-			// TODO
-			return null;
-		} catch (DatabaseException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public boolean put(byte[] key, VersionedValue value) {
-		try {
-			getStore();
-			
-			// TODO
-			return true;
-		} catch (DatabaseException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	/*public boolean put(byte[] key, byte[] value) throws DatabaseException {
-		OperationStatus status = getStore().put(null, new DatabaseEntry(key), new DatabaseEntry(value));
-		return status == OperationStatus.SUCCESS;
-	}
-	
-	public Optional<byte[]> get(byte[] key) throws DatabaseException {
-		DatabaseEntry ret = new DatabaseEntry();
-		OperationStatus status = getStore().get(null, new DatabaseEntry(key), ret, LockMode.RMW);
+		DatabaseEntry dkey = new DatabaseEntry(key);
+		DatabaseEntry dvalue = new DatabaseEntry();
 		
-		if (status == OperationStatus.SUCCESS) {
-			return Optional.of(ret.getData());
-		} else {
-			return Optional.empty();
+		OperationStatus status;
+		try {
+			status = getStore().get(null, dkey, dvalue, LockMode.RMW);
+		} catch (DatabaseException e) {
+			throw new RuntimeException(e);
 		}
-	}*/
+		
+		if (status != OperationStatus.SUCCESS) {
+			return new VersionedValue(Version.INITIAL, Arrays.asList());
+		}
+		
+		try {
+			return MAPPER.readValue(dvalue.getData(), VersionedValue.class);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public boolean put(byte[] key, VersionedValue value, VersionedValue expectedOldValue) {
+		
+			DatabaseEntry dkey = new DatabaseEntry(key);
+			DatabaseEntry doldValue = new DatabaseEntry();
+			
+			try {
+				Transaction tr = env.beginTransaction(null, null);
+				getStore().get(tr, dkey, doldValue, LockMode.RMW);
+			
+				if (Arrays.equals(MAPPER.writeValueAsBytes(expectedOldValue), doldValue.getData())) {
+					
+					DatabaseEntry dnewValue = new DatabaseEntry(MAPPER.writeValueAsBytes(value));
+					OperationStatus status = getStore().put(tr, dkey, dnewValue);
+					
+					return status == OperationStatus.SUCCESS;
+				} else {
+					tr.abort();
+					
+					return false;
+				}
+				
+			} catch (DatabaseException|IOException e) {
+				throw new RuntimeException(e);
+			}
+	}
 
 }

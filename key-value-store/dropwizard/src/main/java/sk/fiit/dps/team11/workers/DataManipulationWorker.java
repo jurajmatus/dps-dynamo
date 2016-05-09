@@ -60,7 +60,7 @@ public class DataManipulationWorker {
 			versionResolution.resolve(oldValue, newValue, true, valueToWrite -> {
 				
 				replicaFinderWorker.send(s.getRequestId());
-				boolean success = db.put(req.getKey(), valueToWrite);
+				boolean success = db.put(req.getKey(), valueToWrite, oldValue);
 				s.acknowledgeForSelf(success);
 				
 			}, isValueCurrent -> {
@@ -80,7 +80,7 @@ public class DataManipulationWorker {
 		
 		versionResolution.resolve(oldValue, newValue, true, valueToWrite -> {
 			
-			boolean success = db.put(putMessage.getKey().data, valueToWrite);
+			boolean success = db.put(putMessage.getKey().data, valueToWrite, oldValue);
 			mq.send(putMessage.getFrom(), "put-ack", new RemotePutAcknowledgement(
 				topology.self().getIp(), putMessage.getRequestId(), success));
 			
