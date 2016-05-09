@@ -4,7 +4,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.annotation.PostConstruct;
@@ -27,6 +30,8 @@ public class Topology {
 	
 	private DynamoNode self;
 	
+	private SortedSet<DynamoNode> nodes = new TreeSet<>();
+	
 	
 	
 	private long getPositionInChord(byte[] key) {
@@ -48,6 +53,7 @@ public class Topology {
 		
 		try {
 			self = new DynamoNode(InetAddress.getLocalHost().getHostAddress(), new Random().nextLong());
+			nodes.add(self);
 		} catch (UnknownHostException e) {
 			throw new RuntimeException("Cannot continue without having an IP address");
 		}
@@ -61,16 +67,43 @@ public class Topology {
 	}
 	
 	public boolean isMy(byte[] key) {
-		// TODO
 		long hash = getPositionInChord(key);
 		
-		// Stub implementation to allow testing redirect / non-redirect branches
-		// return (new Random()).nextBoolean();
+		// TODO
+		// like nodesForKey(), but presence of this node is checked
+		
 		return true;
 	}
 	
 	public DynamoNode self() {
 		return self;
+	}
+	
+	private void addNode(DynamoNode node) {
+		// TODO - initialization logic - poll for information, ...
+		// TODO - use value that came via some information protocol
+		node.setPosition(0);
+		
+		synchronized (nodes) {
+			nodes.add(node);
+		}
+	}
+	
+	public DynamoNode nodeForIp(String ip) {
+		
+		Optional<DynamoNode> nodeWithIp;
+		synchronized (nodes) {
+			nodeWithIp = nodes.stream().filter(node -> node.getIp().equals(ip)).findFirst();
+		}
+		
+		if (nodeWithIp.isPresent()) {
+			return nodeWithIp.get();
+		}
+		
+		DynamoNode newNode = new DynamoNode(ip, 0);
+		execService.execute(() -> addNode(newNode));
+		return newNode;
+		
 	}
 	
 	/**
@@ -80,6 +113,14 @@ public class Topology {
 	public List<DynamoNode> nodesForKey(byte[] key) {
 		// TODO
 		long hash = getPositionInChord(key);
+		
+		synchronized (nodes) {
+			// Iterate nodes
+			// Find the one with highest lower position than key position (variable hash)
+			// Take n-1 succeeding nodes (function numReplicas() - 1)
+			// Remove self if present, to not confuse replication worker - we don't want to send
+			// replication message to self
+		}
 		
 		// Stub implementation - redirect will be to loopback
 		// Just for debugging - final implementation should not contain self

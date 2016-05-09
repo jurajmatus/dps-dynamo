@@ -50,7 +50,7 @@ public class Version {
 	public static enum Comp {
 		FIRST_NEWER,
 		SECOND_NEWER,
-		MIXED,
+		CONCURRENT,
 		EQUAL
 	}
 	

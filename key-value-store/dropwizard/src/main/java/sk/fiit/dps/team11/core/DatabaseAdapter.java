@@ -15,6 +15,7 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 import io.dropwizard.lifecycle.Managed;
+import sk.fiit.dps.team11.models.VersionedValue;
 
 public class DatabaseAdapter implements Managed {
 
@@ -56,7 +57,29 @@ public class DatabaseAdapter implements Managed {
 		return databaseStore;
 	}
 	
-	public boolean put(byte[] key, byte[] value) throws DatabaseException {
+	public VersionedValue get(byte[] key) {
+		try {
+			getStore();
+			
+			// TODO
+			return null;
+		} catch (DatabaseException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public boolean put(byte[] key, VersionedValue value) {
+		try {
+			getStore();
+			
+			// TODO
+			return true;
+		} catch (DatabaseException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/*public boolean put(byte[] key, byte[] value) throws DatabaseException {
 		OperationStatus status = getStore().put(null, new DatabaseEntry(key), new DatabaseEntry(value));
 		return status == OperationStatus.SUCCESS;
 	}
@@ -70,6 +93,6 @@ public class DatabaseAdapter implements Managed {
 		} else {
 			return Optional.empty();
 		}
-	}
+	}*/
 
 }

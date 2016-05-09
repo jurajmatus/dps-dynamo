@@ -6,9 +6,11 @@ public class DynamoNode implements Comparable<DynamoNode> {
 
 	private final String ip;
 	
-	//zoznam replikantov
-	//rozsah
-	private final long position;
+	/**
+	 * Position in chord
+	 * All keys with hashes higher than this will belong to this node
+	 */
+	private long position;
 
 	public DynamoNode(@JsonProperty("ip") String ip, @JsonProperty("position") long position) {
 		this.ip = ip;
@@ -20,8 +22,12 @@ public class DynamoNode implements Comparable<DynamoNode> {
 		return ip;
 	}
 	
+	public void setPosition(long position) {
+		this.position = position;
+	}
+
 	@JsonProperty
-	public long getPosition(long hash) {
+	public long getPosition() {
 		return position;
 	}
 
@@ -31,17 +37,11 @@ public class DynamoNode implements Comparable<DynamoNode> {
 	}
 
 	@Override
-	// Generated
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((ip == null) ? 0 : ip.hashCode());
-		result = prime * result + (int) (position ^ (position >>> 32));
-		return result;
+		return ip.hashCode();
 	}
 
 	@Override
-	// Generated
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;

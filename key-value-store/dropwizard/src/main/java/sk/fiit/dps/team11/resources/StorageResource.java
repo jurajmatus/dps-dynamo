@@ -51,9 +51,6 @@ public class StorageResource {
 	@MQSender(topic = "get")
 	private ActiveMQSender getWorker;
 	
-	@MQSender(topic = "find-for-key")
-	private ActiveMQSender replicaFinderWorker;
-	
 	private <T extends BaseRequest, U extends RequestState<T>> void base(U state, Consumer<U> stateHandler) {
 		
 		Timer timer = metrics.timer(
@@ -95,7 +92,6 @@ public class StorageResource {
 		request.setServletRequest(servletRequest);
 		
 		base(new PutRequestState(response, numReplicas(), request), s -> {
-			replicaFinderWorker.send(s.getRequestId());
 			putWorker.send(s.getRequestId());
 		});
 		

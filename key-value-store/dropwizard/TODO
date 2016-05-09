@@ -1,8 +1,12 @@
+Execution:
+* get
+
 Data manipulation:
 * get
 * put
+* transaction
 
-Version resolution:
+Version:
 * basic implementation
 
 Logging:
