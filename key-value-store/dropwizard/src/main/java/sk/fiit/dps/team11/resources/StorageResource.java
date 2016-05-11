@@ -25,6 +25,7 @@ import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.Topology;
+import sk.fiit.dps.team11.core.VersionResolution;
 import sk.fiit.dps.team11.models.BaseRequest;
 import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.models.PutRequest;
@@ -51,6 +52,12 @@ public class StorageResource {
 	@MQSender(topic = "get")
 	private ActiveMQSender getWorker;
 	
+	@MQSender(topic = "get-replication")
+	private ActiveMQSender replicaFinderWorker;
+	
+	@Inject
+	VersionResolution versionResolution;
+	
 	private <T extends BaseRequest, U extends RequestState<T>> void base(U state, Consumer<U> stateHandler) {
 		
 		Timer timer = metrics.timer(
@@ -75,7 +82,7 @@ public class StorageResource {
 	@Path("{key}")
 	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
 		
-		base(new GetRequestState(response, numReplicas(), request), s -> {
+		base(new GetRequestState(response, numReplicas(), request, versionResolution), s -> {
 			replicaFinderWorker.send(s.getRequestId());
 			getWorker.send(s.getRequestId());
 		});

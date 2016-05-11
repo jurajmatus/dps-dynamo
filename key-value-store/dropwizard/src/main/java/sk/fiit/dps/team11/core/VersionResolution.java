@@ -21,7 +21,7 @@ public class VersionResolution {
 		return version.increment(topology.self());
 	}
 	
-	public void resolve(VersionedValue oldValue, VersionedValue newValue, boolean incrementVersion,
+	public VersionedValue resolve(VersionedValue oldValue, VersionedValue newValue, boolean incrementVersion,
 		Consumer<VersionedValue> withChanged, Consumer<Boolean> withUnchanged) {
 		
 		Comp comparison = Version.compare(oldValue.getVersion(), newValue.getVersion());
@@ -29,10 +29,11 @@ public class VersionResolution {
 		switch (comparison) {
 		case FIRST_NEWER:
 			withUnchanged.accept(false);
-			break;
+			return oldValue;
 			
 		case EQUAL:
 			withUnchanged.accept(true);
+			return oldValue;
 			
 		case CONCURRENT:
 			
@@ -48,6 +49,7 @@ public class VersionResolution {
 			newValue = new VersionedValue(newVersion, allValues);
 			
 			withChanged.accept(newValue);
+			return newValue;
 			
 		case SECOND_NEWER:
 			
@@ -56,9 +58,10 @@ public class VersionResolution {
 			}
 			
 			withChanged.accept(newValue);
+			return newValue;
 
 		default:
-			break;
+			return newValue;
 		}
 		
 	}
