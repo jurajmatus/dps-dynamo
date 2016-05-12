@@ -1,6 +1,7 @@
 package sk.fiit.dps.team11.models;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,7 +22,11 @@ public class VersionedValue {
 		@JsonProperty("values") List<ByteArray> values) {
 		
 		this.version = version;
-		this.values = values;
+		this.values = isEmpty(values) ? Collections.emptyList() : values;
+	}
+	
+	private boolean isEmpty(List<ByteArray> values) {
+		return values.isEmpty() || values.stream().allMatch(byteArray -> byteArray.data.length == 0);
 	}
 
 	@JsonProperty
