@@ -16,6 +16,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,7 +47,7 @@ public class TestStorage {
 			.target("http://localhost:8080/storage");
 	}
 
-	@Test
+	@Ignore @Test
 	public void testPut() throws Exception {
 		
 		PutRequest entity = new PutRequest(KEYS.get(0), VALUES.get(0), Version.INITIAL, 1);
@@ -61,7 +62,7 @@ public class TestStorage {
 		
 	}
 
-	@Test
+	@Ignore @Test
 	public void testGet() throws Exception {
 		
 		Response response = target

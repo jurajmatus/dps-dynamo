@@ -77,7 +77,7 @@ ip r add 10.32.0.0/12 dev vboxnet0	# adds route to Weave network from host compu
 curl $(weave dns-lookup consul-server):8500/v1/catalog/nodes | python -m json.tool
 curl $(weave dns-lookup consul-server):8500/v1/health/service/dynamo | python -m json.tool
 curl $(weave dns-lookup haproxy):8080/check_connectivity
-#open logging in web browser: http://10.32.0.3/login, http://10.32.0.3/loganalyzer
+#open logging in web browser: firefox http://$(weave dns-lookup logging-server)/login, firefox http://$(weave dns-lookup logging-server)/loganalyzer
 ```
 
 ### API

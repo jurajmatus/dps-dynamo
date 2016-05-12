@@ -9,6 +9,8 @@ public class ReliabilityConfiguration {
 	private int responseTimeoutMillis = 500;
 	
 	private int nodeResponseTimeoutMillis = 200;
+	
+	private int topologyChangeTimeoutMillis = 1000;
 
 	@JsonProperty
 	public int getNumReplicas() {
@@ -38,6 +40,14 @@ public class ReliabilityConfiguration {
 	@JsonProperty
 	public void setNodeResponseTimeoutMillis(int nodeResponseTimeoutMillis) {
 		this.nodeResponseTimeoutMillis = nodeResponseTimeoutMillis;
+	}
+
+	public int getTopologyChangeTimeoutMillis() {
+		return topologyChangeTimeoutMillis;
+	}
+
+	public void setTopologyChangeTimeoutMillis(int topologyChangeTimeoutMillis) {
+		this.topologyChangeTimeoutMillis = topologyChangeTimeoutMillis;
 	}
 	
 }

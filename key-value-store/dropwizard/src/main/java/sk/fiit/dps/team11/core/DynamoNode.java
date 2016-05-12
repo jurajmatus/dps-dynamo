@@ -10,9 +10,9 @@ public class DynamoNode implements Comparable<DynamoNode> {
 	 * Position in chord
 	 * All keys with hashes higher than this will belong to this node
 	 */
-	private long position;
+	private Long position;
 
-	public DynamoNode(@JsonProperty("ip") String ip, @JsonProperty("position") long position) {
+	public DynamoNode(@JsonProperty("ip") String ip, @JsonProperty("position") Long position) {
 		this.ip = ip;
 		this.position = position;
 	}
