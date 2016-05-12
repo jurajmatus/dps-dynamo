@@ -1,5 +1,7 @@
 package sk.fiit.dps.team11;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -60,6 +62,10 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		BrokerService brokerService = new BrokerService();
 		try {
 			brokerService.addConnector("tcp://localhost:61616");
+			try {
+				String localIp = InetAddress.getLocalHost().getHostAddress();
+				brokerService.addConnector(String.format("tcp://%s:61616", localIp));
+			} catch (UnknownHostException e) {}
 			brokerService.setBrokerName("local-mq");
 			brokerService.setPersistent(false);
 			brokerService.start();

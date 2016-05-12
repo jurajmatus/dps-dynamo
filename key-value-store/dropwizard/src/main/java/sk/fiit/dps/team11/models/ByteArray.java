@@ -1,6 +1,7 @@
 package sk.fiit.dps.team11.models;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -51,6 +52,33 @@ public class ByteArray {
 	
 	public String toBase64() {
 		return Base64.encodeBase64String(data);
+	}
+	
+	@Override
+	public String toString() {
+		return toBase64();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(data);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ByteArray other = (ByteArray) obj;
+		if (!Arrays.equals(data, other.data))
+			return false;
+		return true;
 	}
 	
 }

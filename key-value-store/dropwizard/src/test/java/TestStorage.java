@@ -19,6 +19,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,6 +32,8 @@ import sk.fiit.dps.team11.models.PutRequest;
 import sk.fiit.dps.team11.models.PutResponse;
 
 public class TestStorage {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(TestStorage.class);
 	
 	public final static List<byte[]> KEYS = Stream.of("SOME_KEY", "longer-key", "   -.,.,/-*/")
 		.map(String::getBytes).collect(toList());
@@ -48,19 +52,15 @@ public class TestStorage {
 	@Before
 	public void prepare() {
 		target = ClientBuilder.newClient()
-			/*.property(ClientProperties.CONNECT_TIMEOUT, 2000)
-			.property(ClientProperties.READ_TIMEOUT, 2000)*/
+			.property(ClientProperties.CONNECT_TIMEOUT, 5000)
+			.property(ClientProperties.READ_TIMEOUT, 5000)
 			.target("http://localhost:8080/storage");
 	}
 	
 	private PutResponse put(PutRequest request) throws Exception {
-		PutRequest entity = new PutRequest(KEYS.get(0), VALUES.get(0), Version.INITIAL, MIN_NUM_RW);
-		
-		Response response = target.request().buildPut(Entity.entity(entity, MediaType.APPLICATION_JSON)).invoke();
+		Response response = target.request().buildPut(Entity.entity(request, MediaType.APPLICATION_JSON)).invoke();
 		
 		PutResponse resp = response.readEntity(PutResponse.class);
-		
-		MAPPER.writeValue(System.out, resp);
 		
 		return resp;
 	}
@@ -74,7 +74,7 @@ public class TestStorage {
 		
 		GetResponse resp = response.readEntity(GetResponse.class);
 		
-		MAPPER.writeValue(System.out, resp);
+		LOGGER.info("Get response: {}", MAPPER.writeValueAsString(resp));
 		
 		return resp;
 	}
@@ -151,8 +151,8 @@ public class TestStorage {
 		GetResponse resp = get(key);
 		
 		assertThat(resp.getValue().getValues(), contains(Arrays.asList(
-			equalTo(Arrays.asList(new ByteArray(value1))),
-			equalTo(Arrays.asList(new ByteArray(value2))))));
+			equalTo(new ByteArray(value1)),
+			equalTo(new ByteArray(value2)))));
 		
 		assertThat(Version.compare(resp.getValue().getVersion(), version1), equalTo(Comp.FIRST_NEWER));
 		assertThat(Version.compare(resp.getValue().getVersion(), version2), equalTo(Comp.FIRST_NEWER));

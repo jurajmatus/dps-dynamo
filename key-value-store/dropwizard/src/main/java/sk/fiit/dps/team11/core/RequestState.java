@@ -88,7 +88,7 @@ abstract public class RequestState<T extends BaseRequest> {
 	protected boolean putForNode(DynamoNode node, Object data) {
 		synchronized (this.data) {
 			// Duplicate data will be discarded
-			if (this.data.containsKey(node)) {
+			if (this.data.containsKey(node) && this.data.get(node).isPresent()) {
 				return false;
 			}
 			this.data.put(node, Optional.of(data));
