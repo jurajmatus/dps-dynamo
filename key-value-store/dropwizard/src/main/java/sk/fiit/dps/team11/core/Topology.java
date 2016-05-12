@@ -124,7 +124,7 @@ public class Topology {
 		
 		// Stub implementation - redirect will be to loopback
 		// Just for debugging - final implementation should not contain self
-		return Collections.nCopies(numReplicas(), self);
+		return Collections.nCopies(numReplicas() - 1, self);
 	}
 	
 	// TODO - polling, notifications about new nodes / nodes removals
