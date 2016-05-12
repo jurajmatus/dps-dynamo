@@ -48,6 +48,7 @@ public class MQ {
 			
 			return true;
 		} catch (Exception e) {
+			LOGGER.error("Messaging error", e);
 			try {
 				if (session != null) {
 					session.close();

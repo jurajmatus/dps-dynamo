@@ -74,7 +74,7 @@ public class WrappedMethodWorker<T> implements ActiveMQReceiver<T>, ActiveMQBase
 		try {
 			method.invoke(multiWorker, requestId);
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			LOGGER.error("Worker invocation error ({}.{})", multiWorker.getClass().getSimpleName(), method.getName());
+			LOGGER.error("Worker invocation error ({}.{})", multiWorker.getClass().getSimpleName(), method.getName(), e);
 		}
 	}
 
