@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -36,6 +37,8 @@ import sk.fiit.dps.team11.core.Version.Serializer;
 public class Version {
 
 	public static final Version INITIAL = new Version(Collections.emptyList());
+	
+	private final static ObjectMapper MAPPER = new ObjectMapper();
 	
 	public static class Serializer extends JsonSerializer<Version> {
 
@@ -186,6 +189,15 @@ public class Version {
 		});
 		
 		return new Version(highest.values());
+	}
+	
+	@Override
+	public String toString() {
+		try {
+			return MAPPER.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			return "";
+		}
 	}
 	
 }

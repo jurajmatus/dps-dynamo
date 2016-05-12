@@ -48,8 +48,8 @@ public class TestStorage {
 	@Before
 	public void prepare() {
 		target = ClientBuilder.newClient()
-			.property(ClientProperties.CONNECT_TIMEOUT, 2000)
-			.property(ClientProperties.READ_TIMEOUT, 2000)
+			/*.property(ClientProperties.CONNECT_TIMEOUT, 2000)
+			.property(ClientProperties.READ_TIMEOUT, 2000)*/
 			.target("http://localhost:8080/storage");
 	}
 	

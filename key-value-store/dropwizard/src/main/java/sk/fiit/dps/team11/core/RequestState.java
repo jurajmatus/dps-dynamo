@@ -146,6 +146,10 @@ abstract public class RequestState<T extends BaseRequest> {
 		return getState() >= all;
 	}
 	
+	public boolean isTerminated() {
+		return responseSent.get() || response.isCancelled() || response.isDone();
+	}
+	
 	protected abstract Object provideResponse();
 	
 	protected void respond() {
