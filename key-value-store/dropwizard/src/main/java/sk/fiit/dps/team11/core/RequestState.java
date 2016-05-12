@@ -147,7 +147,7 @@ abstract public class RequestState<T extends BaseRequest> {
 	}
 	
 	public boolean isTerminated() {
-		return responseSent.get() || response.isCancelled() || response.isDone();
+		return response.isCancelled();
 	}
 	
 	protected abstract Object provideResponse();

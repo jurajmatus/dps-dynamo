@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.primitives.Bytes;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
@@ -94,7 +93,8 @@ public class DatabaseAdapter implements Managed {
 				Transaction tr = env.beginTransaction(null, null);
 				getStore().get(tr, dkey, doldValue, LockMode.RMW);
 			
-				if (Arrays.equals(MAPPER.writeValueAsBytes(expectedOldValue), doldValue.getData())) {
+				if (doldValue.getData() == null
+					|| Arrays.equals(MAPPER.writeValueAsBytes(expectedOldValue), doldValue.getData())) {
 					
 					DatabaseEntry dnewValue = new DatabaseEntry(MAPPER.writeValueAsBytes(value));
 					OperationStatus status = getStore().put(tr, dkey, dnewValue);
