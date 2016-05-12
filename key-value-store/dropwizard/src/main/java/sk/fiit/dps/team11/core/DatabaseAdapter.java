@@ -5,9 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.primitives.Bytes;
+import com.sleepycat.je.Cursor;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
@@ -69,7 +70,7 @@ public class DatabaseAdapter implements Managed {
 		
 		OperationStatus status;
 		try {
-			status = getStore().get(null, dkey, dvalue, LockMode.RMW);
+			status = getStore().get(null, dkey, dvalue, LockMode.DEFAULT);
 		} catch (DatabaseException e) {
 			throw new RuntimeException(e);
 		}
@@ -94,21 +95,61 @@ public class DatabaseAdapter implements Managed {
 				Transaction tr = env.beginTransaction(null, null);
 				getStore().get(tr, dkey, doldValue, LockMode.RMW);
 			
-				if (Arrays.equals(MAPPER.writeValueAsBytes(expectedOldValue), doldValue.getData())) {
+				if (doldValue.getData() == null
+					|| Arrays.equals(MAPPER.writeValueAsBytes(expectedOldValue), doldValue.getData())) {
 					
 					DatabaseEntry dnewValue = new DatabaseEntry(MAPPER.writeValueAsBytes(value));
 					OperationStatus status = getStore().put(tr, dkey, dnewValue);
 					
-					return status == OperationStatus.SUCCESS;
+					if (status == OperationStatus.SUCCESS) {
+						tr.commit();
+						return true;
+					} else {
+						tr.abort();
+						return false;
+					}
 				} else {
 					tr.abort();
-					
 					return false;
 				}
 				
 			} catch (DatabaseException|IOException e) {
 				throw new RuntimeException(e);
 			}
+	}
+	
+	public long numEntries() {
+		try {
+			return getStore().count();
+		} catch (DatabaseException e) {
+			return 0;
+		}
+	}
+	
+	/**
+	 * Iterates all keys in the database
+	 * @throws DatabaseException 
+	 */
+	public void forEach(BiConsumer<byte[], VersionedValue> consumer) throws DatabaseException {
+		Cursor cursor = null;
+		
+		try {
+			cursor = getStore().openCursor(null, null);
+			
+			DatabaseEntry dkey = new DatabaseEntry();
+			DatabaseEntry dvalue = new DatabaseEntry();
+			
+			while (cursor.getNext(dkey, dvalue, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+				try {
+					VersionedValue value = MAPPER.readValue(dvalue.getData(), VersionedValue.class);
+					consumer.accept(dkey.getData(), value);
+				} catch (IOException e) {}
+			}
+		} finally {
+			if (cursor != null) {
+				cursor.close();
+			}
+		}
 	}
 
 }

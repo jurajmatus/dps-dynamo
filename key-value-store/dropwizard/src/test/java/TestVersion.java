@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Random;
 
 import org.hamcrest.Matchers;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -107,7 +106,7 @@ public class TestVersion {
 		Object entries = _entries.get(merged);
 		
 		assertThat(entries instanceof Collection<?>, is(true));
-		assertThat(((Collection) entries).size(), lessThan(11));
+		assertThat(((Collection<?>) entries).size(), lessThan(11));
 	}
 	
 }

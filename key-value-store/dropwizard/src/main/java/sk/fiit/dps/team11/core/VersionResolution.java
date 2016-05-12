@@ -31,10 +31,6 @@ public class VersionResolution {
 			withUnchanged.accept(false);
 			return oldValue;
 			
-		case EQUAL:
-			withUnchanged.accept(true);
-			return oldValue;
-			
 		case CONCURRENT:
 			
 			Version newVersion = oldValue.getVersion().merge(newValue.getVersion());
@@ -50,6 +46,13 @@ public class VersionResolution {
 			
 			withChanged.accept(newValue);
 			return newValue;
+			
+		case EQUAL:
+			
+			if (!incrementVersion) {
+				withUnchanged.accept(true);
+				return newValue;
+			}
 			
 		case SECOND_NEWER:
 			

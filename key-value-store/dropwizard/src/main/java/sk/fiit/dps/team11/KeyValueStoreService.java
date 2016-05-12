@@ -1,5 +1,7 @@
 package sk.fiit.dps.team11;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -36,6 +38,7 @@ import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
 import sk.fiit.dps.team11.resources.StorageResource;
 import sk.fiit.dps.team11.workers.DataManipulationWorker;
+import sk.fiit.dps.team11.workers.GlobalMetricsWorker;
 import sk.fiit.dps.team11.workers.ReplicaFinderWorker;
 import sk.fiit.dps.team11.workers.ReplicationWorker;
 import sk.fiit.dps.team11.workers.TimeoutCheckWorker;
@@ -60,6 +63,10 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		BrokerService brokerService = new BrokerService();
 		try {
 			brokerService.addConnector("tcp://localhost:61616");
+			try {
+				String localIp = InetAddress.getLocalHost().getHostAddress();
+				brokerService.addConnector(String.format("tcp://%s:61616", localIp));
+			} catch (UnknownHostException e) {}
 			brokerService.setBrokerName("local-mq");
 			brokerService.setPersistent(false);
 			brokerService.start();
@@ -99,6 +106,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				.threads(configuration.getParallelism().getNumScheduledThreads())
 				.build();
 		
+		injectManager.register(new GlobalMetricsWorker());
+		
 		// Injections
 		environment.jersey().register(new AbstractBinder() {
 			@Override
@@ -112,7 +121,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(execService).to(ScheduledExecutorService.class);
 				bind(Topology.class).to(Topology.class).in(Singleton.class);
 				bind(injectManager).to(InjectManager.class);
-				bind(VersionResolution.class).to(InjectManager.class).in(Singleton.class);
+				bind(VersionResolution.class).to(VersionResolution.class).in(Singleton.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)
