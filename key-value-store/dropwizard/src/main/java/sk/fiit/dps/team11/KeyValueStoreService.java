@@ -112,7 +112,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(execService).to(ScheduledExecutorService.class);
 				bind(Topology.class).to(Topology.class).in(Singleton.class);
 				bind(injectManager).to(InjectManager.class);
-				bind(VersionResolution.class).to(InjectManager.class).in(Singleton.class);
+				bind(VersionResolution.class).to(VersionResolution.class).in(Singleton.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)
