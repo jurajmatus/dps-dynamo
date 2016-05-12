@@ -62,16 +62,15 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		
 		BrokerService brokerService = new BrokerService();
 		try {
-			brokerService.addConnector("tcp://localhost:61616");
-			try {
-				String localIp = InetAddress.getLocalHost().getHostAddress();
-				brokerService.addConnector(String.format("tcp://%s:61616", localIp));
-			} catch (UnknownHostException e) {}
+			String localIp = InetAddress.getLocalHost().getHostAddress();
+			System.out.printf("Host IP address is '%s'\n.", localIp);
+			brokerService.addConnector(String.format("tcp://%s:61616", localIp));
 			brokerService.setBrokerName("local-mq");
 			brokerService.setPersistent(false);
 			brokerService.start();
 		} catch (Exception e) {
 			LOGGER.error("Couldn't initialize Message queue");
+			e.printStackTrace();
 			System.exit(1);
 		}
 		

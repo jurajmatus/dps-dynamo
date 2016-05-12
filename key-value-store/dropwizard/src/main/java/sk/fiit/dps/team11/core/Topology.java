@@ -3,6 +3,7 @@ package sk.fiit.dps.team11.core;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -62,11 +63,33 @@ public class Topology {
 		//Gets IP address of interface ethwe0
 		String interfaceAddr = "ethwe0";
 		String myIpAddr = "";
+		NetworkInterface interf = null;
 		
 		try {
-			NetworkInterface interf = NetworkInterface.getByName(interfaceAddr);
+			interf = NetworkInterface.getByName(interfaceAddr);
+		}
+		catch (SocketException e) {
+			System.err.printf("Cannot get IP address of network interface. Returned IP is '%s'\n", myIpAddr);
+			LOGGER.error("Cannot get IP address of network interface. Returned IP is '%s'\n", myIpAddr);
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		
+		if (interf == null) {
+			//If interface ethwe0 does not exists, bind to first interface
+			try {
+				self = new DynamoNode(InetAddress.getLocalHost().getHostAddress(), new Random().nextLong());
+				nodes.add(self);
+			} catch (UnknownHostException e) {
+				System.err.printf("Cannot get IP address of localhost network interface\n.");
+				LOGGER.error("Cannot get IP address of localhost network interface\n.");
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
+		else {
 			Enumeration<InetAddress> addresses = interf.getInetAddresses();
-			
+		
 			int i = 0;
 			if ( addresses.hasMoreElements() ) {
 				InetAddress ia = addresses.nextElement();
@@ -76,20 +99,15 @@ public class Topology {
 				LOGGER.info("Registering node with hostname '%s' and IP address '%s'\n", this.hostname, myIpAddr);
 				i++;
 			}
+			
+			Long myPosition = new Long(new Random().nextLong());
+			
+			consulClient = new ConsulClient("ethwe0", 8080);
+			consulServiceRegister(myPosition);
+			
+			self = new DynamoNode(myIpAddr, myPosition);
+			nodes.add(self);
 		}
-		catch (SocketException e) {
-			System.err.printf("Cannot get IP address of network interface. Returned IP is '%s'\n", myIpAddr);
-			LOGGER.error("Cannot get IP address of network interface. Returned IP is '%s'\n", myIpAddr);
-			System.exit(-1);
-		}
-		
-		Long myPosition = new Long(new Random().nextLong());
-		
-		consulClient = new ConsulClient("ethwe0", 8080);
-		consulServiceRegister(myPosition);
-		
-		self = new DynamoNode(myIpAddr, myPosition);
-		nodes.add(self);
 		
 		// TODO - register some repeated polling?
 		// execService.scheduleAtFixedRate(this::poll, 0, 1, TimeUnit.SECONDS);
