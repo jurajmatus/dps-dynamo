@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
+import static java.util.stream.Collectors.toList;
+
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.core.DynamoNode;
 import sk.fiit.dps.team11.core.GetRequestState;
@@ -38,6 +40,9 @@ public class ReplicaFinderWorker {
 	private void handleState(RequestState<?> state) {
 		List<DynamoNode> nodesForKey = topology.nodesForKey(state.getRequest().getKey());
 		state.addNodes(nodesForKey);
+
+		LOGGER.info("Will send replicas to the following nodes for request {}: {}", state.getRequestId(),
+				nodesForKey.stream().map(node -> node.getIp()).collect(toList()));
 		
 		ActiveMQSender nextPhase = (state instanceof GetRequestState) ? getReplicator
 			: ((state instanceof PutRequestState) ? putReplicator : null);

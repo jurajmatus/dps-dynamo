@@ -46,6 +46,7 @@ public class ReplicationWorker {
 		
 		for (DynamoNode node : toContact) {
 			
+			LOGGER.info("Sending replica for request {} to {}", state.getRequestId(), node.getIp());
 			mq.send(node.getIp(), String.format("%s-replica", mqPrefix), messageProvider.get());
 			
 		}
