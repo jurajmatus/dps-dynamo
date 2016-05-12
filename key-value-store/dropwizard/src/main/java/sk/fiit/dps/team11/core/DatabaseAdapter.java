@@ -5,8 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sleepycat.je.Cursor;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
@@ -68,7 +70,7 @@ public class DatabaseAdapter implements Managed {
 		
 		OperationStatus status;
 		try {
-			status = getStore().get(null, dkey, dvalue, LockMode.RMW);
+			status = getStore().get(null, dkey, dvalue, LockMode.DEFAULT);
 		} catch (DatabaseException e) {
 			throw new RuntimeException(e);
 		}
@@ -114,6 +116,40 @@ public class DatabaseAdapter implements Managed {
 			} catch (DatabaseException|IOException e) {
 				throw new RuntimeException(e);
 			}
+	}
+	
+	public long numEntries() {
+		try {
+			return getStore().count();
+		} catch (DatabaseException e) {
+			return 0;
+		}
+	}
+	
+	/**
+	 * Iterates all keys in the database
+	 * @throws DatabaseException 
+	 */
+	public void forEach(BiConsumer<byte[], VersionedValue> consumer) throws DatabaseException {
+		Cursor cursor = null;
+		
+		try {
+			cursor = getStore().openCursor(null, null);
+			
+			DatabaseEntry dkey = new DatabaseEntry();
+			DatabaseEntry dvalue = new DatabaseEntry();
+			
+			while (cursor.getNext(dkey, dvalue, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+				try {
+					VersionedValue value = MAPPER.readValue(dvalue.getData(), VersionedValue.class);
+					consumer.accept(dkey.getData(), value);
+				} catch (IOException e) {}
+			}
+		} finally {
+			if (cursor != null) {
+				cursor.close();
+			}
+		}
 	}
 
 }

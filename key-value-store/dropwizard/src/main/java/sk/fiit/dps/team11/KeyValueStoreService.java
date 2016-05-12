@@ -38,6 +38,7 @@ import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
 import sk.fiit.dps.team11.resources.StorageResource;
 import sk.fiit.dps.team11.workers.DataManipulationWorker;
+import sk.fiit.dps.team11.workers.GlobalMetricsWorker;
 import sk.fiit.dps.team11.workers.ReplicaFinderWorker;
 import sk.fiit.dps.team11.workers.ReplicationWorker;
 import sk.fiit.dps.team11.workers.TimeoutCheckWorker;
@@ -104,6 +105,8 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 			environment.lifecycle().scheduledExecutorService("sch-thread-pool-%d")
 				.threads(configuration.getParallelism().getNumScheduledThreads())
 				.build();
+		
+		injectManager.register(new GlobalMetricsWorker());
 		
 		// Injections
 		environment.jersey().register(new AbstractBinder() {
