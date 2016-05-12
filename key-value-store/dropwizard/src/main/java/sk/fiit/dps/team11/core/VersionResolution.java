@@ -48,6 +48,12 @@ public class VersionResolution {
 			return newValue;
 			
 		case EQUAL:
+			
+			if (!incrementVersion) {
+				withUnchanged.accept(true);
+				return newValue;
+			}
+			
 		case SECOND_NEWER:
 			
 			if (incrementVersion) {

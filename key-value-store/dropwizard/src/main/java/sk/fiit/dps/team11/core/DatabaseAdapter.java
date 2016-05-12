@@ -99,10 +99,15 @@ public class DatabaseAdapter implements Managed {
 					DatabaseEntry dnewValue = new DatabaseEntry(MAPPER.writeValueAsBytes(value));
 					OperationStatus status = getStore().put(tr, dkey, dnewValue);
 					
-					return status == OperationStatus.SUCCESS;
+					if (status == OperationStatus.SUCCESS) {
+						tr.commit();
+						return true;
+					} else {
+						tr.abort();
+						return false;
+					}
 				} else {
 					tr.abort();
-					
 					return false;
 				}
 				

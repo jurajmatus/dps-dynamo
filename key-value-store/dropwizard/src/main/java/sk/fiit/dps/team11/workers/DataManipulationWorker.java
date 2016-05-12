@@ -88,7 +88,7 @@ public class DataManipulationWorker {
 		VersionedValue newValue = new VersionedValue(putMessage.getFromVersion(),
 			Arrays.asList(putMessage.getValue()));
 		
-		versionResolution.resolve(oldValue, newValue, true, valueToWrite -> {
+		versionResolution.resolve(oldValue, newValue, false, valueToWrite -> {
 			
 			boolean success = db.put(putMessage.getKey().data, valueToWrite, oldValue);
 			mq.send(putMessage.getFrom(), "put-ack", new RemotePutAcknowledgement(
