@@ -81,7 +81,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 	@Override
 	public void run(final TopConfiguration configuration, Environment environment) {
 
-		environment.healthChecks().register("base-app", new HealthCheck() {
+		environment.healthChecks().register("dynamo", new HealthCheck() {
 			@Override
 			protected Result check() throws Exception {
 				return Result.healthy();

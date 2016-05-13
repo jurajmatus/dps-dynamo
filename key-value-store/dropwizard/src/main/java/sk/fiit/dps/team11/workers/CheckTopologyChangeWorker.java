@@ -106,8 +106,7 @@ public class CheckTopologyChangeWorker {
 			if (state.isDone()) {
 				return;
 			}
-			
-			//SortedSet<String> activeDynamoNodes = new TreeSet<String>();
+
 			SortedSet<DynamoNode> activeDynamoNodes = new TreeSet<DynamoNode>();
 
 			WebTarget target = ClientBuilder.newClient()

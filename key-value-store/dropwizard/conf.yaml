@@ -28,7 +28,7 @@ metrics:
       rateUnit: seconds
       useRegexFilters: false
       frequency: 5 seconds
-      host: logging
+      host: logging-server
       port: 2003
 activeMQ:
   brokerUrl: vm://local-mq

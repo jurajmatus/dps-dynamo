@@ -2,8 +2,6 @@ version: "2.0"
 services: 
   key-value-store:
     build: .
-    container_name: "key-value-store"
-    hostname: "key-value-store.weave.local"
     network_mode: "weave"
     restart: always
 

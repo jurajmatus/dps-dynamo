@@ -23,6 +23,7 @@ import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.agent.model.NewService;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import com.google.common.net.InetAddresses;
 
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.workers.CheckTopologyChangeWorker;
@@ -55,8 +56,6 @@ public class Topology {
 		return conf.getReliability().getNumReplicas();
 	}
 	
-	
-	
 	@PostConstruct
 	private void init() {
 		
@@ -76,9 +75,10 @@ public class Topology {
 		}
 		
 		if (interf == null) {
-			//If interface ethwe0 does not exists, bind to first interface
+			//If interface ethwe0 does not exists, bind to localhost
 			try {
 				self = new DynamoNode(InetAddress.getLocalHost().getHostAddress(), new Random().nextLong());
+				this.hostname = InetAddress.getLocalHost().getHostName();
 				nodes.add(self);
 			} catch (UnknownHostException e) {
 				System.err.printf("Cannot get IP address of localhost network interface\n.");
@@ -89,20 +89,30 @@ public class Topology {
 		}
 		else {
 			Enumeration<InetAddress> addresses = interf.getInetAddresses();
-		
-			int i = 0;
-			if ( addresses.hasMoreElements() ) {
-				InetAddress ia = addresses.nextElement();
-				this.hostname = ia.getHostName(); 
-				myIpAddr = ia.getHostAddress();
-				System.out.printf("IP address '%d' of host '%s' interface is '%s'\n", i, ia.getHostName(), myIpAddr);
-				LOGGER.info("Registering node with hostname '%s' and IP address '%s'\n", this.hostname, myIpAddr);
-				i++;
-			}
+			
+	        for (InetAddress inetAddress : Collections.list(addresses)) {
+	        	try {
+	        		InetAddresses.forString(inetAddress.getHostAddress());
+	        	} catch (IllegalArgumentException e) {
+	        		System.err.printf("Invalid IP address '%s'. Continue to next.\n", inetAddress.getHostAddress());
+	        		continue;
+	        	}
+	        	myIpAddr = inetAddress.getHostAddress();
+	        	try {
+					this.hostname = InetAddress.getLocalHost().getHostName();
+				} catch (UnknownHostException e) {
+					System.err.printf("Cannot get Hostname from Localhost\n");
+					LOGGER.error("Cannot get Hostname from Localhost\n");
+					e.printStackTrace();
+				}
+	        }
+			
+			System.out.printf("Registering node with hostname '%s' and IP address '%s'.\n", this.hostname, myIpAddr);
+			LOGGER.info("Registering node with hostname " + this.hostname + " and IP address " + myIpAddr + ".");
 			
 			Long myPosition = new Long(new Random().nextLong());
-			
-			consulClient = new ConsulClient("ethwe0", 8080);
+
+			consulClient = new ConsulClient("consul-server");
 			consulServiceRegister(myPosition);
 			
 			self = new DynamoNode(myIpAddr, myPosition);
@@ -218,7 +228,7 @@ public class Topology {
 			Long pos = dn.getPosition();
 			if ( !newNodesIpsSet.contains(ip) ) {
 				//node was deleted
-				LOGGER.info("Removing node with IP '%s' and position '%ld' from topology\n", ip, pos);
+				LOGGER.info("Removing node with IP " + ip + " and position " + pos + " from topology\n", ip, pos);
 				nodes.remove(ip);
 			}
 		}
@@ -233,7 +243,7 @@ public class Topology {
 			}
 			else {
 				//new node
-				LOGGER.info("Adding node with IP '%s' and position '%ld' to topology\n", ip, pos);
+				LOGGER.info("Adding node with IP " + ip + " and position " + pos + " to topology\n", ip, pos);
 				synchronized (nodes) {
 					nodes.add(new DynamoNode(ip, pos));
 				}
@@ -245,8 +255,7 @@ public class Topology {
 		
 		// List<String> tags = new ArrayList<String>();
 		// tags.add(position);
-		
-		// register new service with associated health check
+
 		NewService newService = new NewService();
 		
 		newService.setId(position.toString());
@@ -255,11 +264,12 @@ public class Topology {
 		//newService.setTags(tags);
 
 		NewService.Check serviceCheck = new NewService.Check();
-		serviceCheck.setHttp("http://localhost:8081/healthcheck");
+		serviceCheck.setHttp(String.format("http://%s:8081/healthcheck", this.hostname));
 		serviceCheck.setInterval("5s");
 		serviceCheck.setTimeout("3s");
 		newService.setCheck(serviceCheck);
 
+		System.out.printf("Consul register: 'http://%s:8081/healthcheck'.\n", this.hostname);
 		consulClient.agentServiceRegister(newService);
 		
 	}

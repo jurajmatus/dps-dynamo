@@ -7,9 +7,9 @@ echo "/bin/consul agent -server -bootstrap-expect 1 \
  -config-dir="/etc/consul.d"\
  -ui-dir="/ui"\
  -data-dir="/data"\
- -bind="$(ip a | grep -E -A5 "ethwe@.*" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
- -advertise="$(ip a | grep -E -A5 "ethwe@.*" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
- -client="$(ip a | grep -E -A5 "ethwe@.*" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)""
+ -bind="$(ip a | grep -E -A5 "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -advertise="$(ip a | grep -E -A5 "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -client="$(ip a | grep -E -A5 "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)""
 
 rm -rf /data/*
 
@@ -18,7 +18,7 @@ rm -rf /data/*
  -config-dir="/etc/consul.d"\
  -ui-dir="/ui"\
  -data-dir="/data"\
- -bind="$(ip a | grep -E -A5 "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
- -advertise="$(ip a | grep -E -A5 "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
- -client="$(ip a | grep -E -A5 "ethwe" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"
+ -bind="$(ip a | grep -E -A5 "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -advertise="$(ip a | grep -E -A5 "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"\
+ -client="$(ip a | grep -E -A5 "ethwe0" | grep -Eo "inet ([0-9]+\.){3}[0-9]+" | cut -d " " -f 2 | head -n1)"
  
