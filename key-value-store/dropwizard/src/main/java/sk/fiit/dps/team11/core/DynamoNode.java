@@ -52,7 +52,12 @@ public class DynamoNode implements Comparable<DynamoNode> {
 		if (!(obj instanceof DynamoNode)) {
 			return false;
 		}
-		return ip.equals(((DynamoNode) obj).ip);
+		
+		if ( ip.equals(((DynamoNode) obj).ip) && position.equals(((DynamoNode) obj).position) )
+			return true;
+		else
+			return false;
+		
 	}
 
 	@Override

@@ -74,10 +74,10 @@ eval "$(weave env --restore)"
 Setup Host and test
 ```bash
 ip r add 10.32.0.0/12 dev vboxnet0	# adds route to Weave network from host computer
-curl $(weave dns-lookup consul-server):8500/v1/catalog/nodes | python -m json.tool
-curl $(weave dns-lookup consul-server):8500/v1/health/service/dynamo | python -m json.tool
-curl $(weave dns-lookup haproxy):8080/check_connectivity
-#open logging in web browser: firefox http://$(weave dns-lookup logging-server)/login, firefox http://$(weave dns-lookup logging-server)/loganalyzer
+curl $(weave dns-lookup consul-server | head -n1):8500/v1/catalog/nodes | python -m json.tool
+curl $(weave dns-lookup consul-server | head -n1):8500/v1/health/service/dynamo | python -m json.tool
+curl $(weave dns-lookup haproxy | head -n1):8080/check_connectivity
+#open logging in web browser: firefox http://$(weave dns-lookup logging-server | head -n1)/login, firefox http://$(weave dns-lookup logging-server | head -n1)/loganalyzer
 ```
 
 ### API

@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -34,6 +35,7 @@ public class Topology {
 	private final static HashFunction MD5 = Hashing.md5();
 	
 	ConsulClient consulClient;
+	
 	String hostname;
 	
 	@Inject
@@ -43,22 +45,10 @@ public class Topology {
 	private TopConfiguration conf;
 	
 	private DynamoNode self;
-	
 	private SortedSet<DynamoNode> nodes = new TreeSet<>();
-	
-	
-	
-	private long getPositionInChord(byte[] key) {
-		return MD5.hashBytes(key).asLong();
-	}
-	
-	private int numReplicas() {
-		return conf.getReliability().getNumReplicas();
-	}
 	
 	@PostConstruct
 	private void init() {
-		
 		//Gets IP address of interface ethwe0
 		String interfaceAddr = "ethwe0";
 		String myIpAddr = "";
@@ -123,6 +113,14 @@ public class Topology {
 		// execService.scheduleAtFixedRate(this::poll, 0, 1, TimeUnit.SECONDS);
 	}
 	
+	private long getPositionInChord(byte[] key) {
+		return MD5.hashBytes(key).asLong();
+	}
+	
+	private int numReplicas() {
+		return conf.getReliability().getNumReplicas();
+	}
+	
 	private void poll() {
 		//TODO
 	}
@@ -130,10 +128,38 @@ public class Topology {
 	public boolean isMy(byte[] key) {
 		long hash = getPositionInChord(key);
 		
-		// TODO
-		// like nodesForKey(), but presence of this node is checked
+		DynamoNode responsibleNode = null;
+		DynamoNode actualNode;
 		
-		return true;
+		synchronized (nodes) {
+			while (this.nodes.iterator().hasNext()) {
+				actualNode = this.nodes.iterator().next();
+				if ( actualNode.getPosition() > hash ) {
+					//First node with higher position in sorted set is responsible for hash key
+					responsibleNode = actualNode;
+					break;
+				}
+			}
+			if ( responsibleNode == null ) {
+				responsibleNode = this.nodes.first();
+			}
+		}
+		
+		if ( responsibleNode.equals(this.self) ) {
+			System.out.print("Checking if key '" + hash + "' belongs to my node [" + 
+					self.getIp() + ";" + self.getPosition() + "] --- TRUE");
+			LOGGER.info("Checking if key '" + hash + "' belongs to my node [" + 
+					self.getIp() + ";" + self.getPosition() + "] --- TRUE");
+			return true;
+		}
+		else {
+			System.out.print("Checking if key '" + hash + "' belongs to my node [" + 
+					self.getIp() + ";" + self.getPosition() + "] --- FALSE");
+			LOGGER.info("Checking if key '" + hash + "' belongs to my node [" + 
+					self.getIp() + ";" + self.getPosition() + "] --- FALSE");
+			return false;
+		}
+		
 	}
 	
 	public DynamoNode self() {
@@ -142,21 +168,32 @@ public class Topology {
 	
 	private void addNode(DynamoNode node) {
 		// TODO - initialization logic - poll for information, ...
-		// TODO - use value that came via some information protocol
-		node.setPosition(0);
+		
+		//Redistribute items from other nodes and also replicate them to appropriate nodes 
 		
 		synchronized (nodes) {
 			nodes.add(node);
 		}
 	}
 	
+	private void deleteNode(DynamoNode node) {
+		// TODO - initialization logic - poll for information, ...
+		
+		//Save items from deleted node replicas and redistribute them to appropriate nodes 
+		
+		synchronized (nodes) {
+			nodes.remove(node);
+		}
+	}
+	
 	public DynamoNode nodeForIp(String ip) {
 		
+		//Finds first DynamoNode with given 'ip'
 		Optional<DynamoNode> nodeWithIp;
 		synchronized (nodes) {
 			nodeWithIp = nodes.stream().filter(node -> node.getIp().equals(ip)).findFirst();
 		}
-		
+
 		if (nodeWithIp.isPresent()) {
 			return nodeWithIp.get();
 		}
@@ -172,20 +209,38 @@ public class Topology {
 	 * @return list of nodes responsible for the key, ordered counter-clockwise (except this one)
 	 */
 	public List<DynamoNode> nodesForKey(byte[] key) {
-		// TODO
+		
 		long hash = getPositionInChord(key);
+		List<DynamoNode> responsibleNodes = new ArrayList<DynamoNode>();
+		
+		DynamoNode[] dynamoNodeArray = (DynamoNode[]) nodes.toArray();
+		int firstResponsibleNodeIndex = 0;
 		
 		synchronized (nodes) {
-			// Iterate nodes
-			// Find the one with highest lower position than key position (variable hash)
-			// Take n-1 succeeding nodes (function numReplicas() - 1)
-			// Remove self if present, to not confuse replication worker - we don't want to send
-			// replication message to self
+			for (int i = 0; i < dynamoNodeArray.length; i++) {
+				if ( dynamoNodeArray[i].getPosition() > hash ) {
+					//First node with higher position in sorted set is responsible for hash key
+					firstResponsibleNodeIndex = i;
+					break;
+				}
+			}
+
+			for (int i = 0; i < numReplicas() - 1 ; i++) {
+				int circularIndex = (firstResponsibleNodeIndex - i) % dynamoNodeArray.length; 
+				responsibleNodes.add(dynamoNodeArray[circularIndex]);
+			}
 		}
 		
-		// Stub implementation - redirect will be to loopback
-		// Just for debugging - final implementation should not contain self
-		return Collections.nCopies(numReplicas() - 1, self);
+		StringBuilder sb = new StringBuilder();
+		while (responsibleNodes.iterator().hasNext()) {
+			DynamoNode dn = responsibleNodes.iterator().next();
+			sb.append("\tNode: IP[" + dn.getIp() + "] Position[" + dn.getPosition() + "]\n");
+		}
+		System.out.print("Responsible nodes for key" + hash + " are: \n" + sb.toString());
+		LOGGER.info("Responsible nodes for key" + hash + " are " + sb.toString());
+		
+		return responsibleNodes;
+				
 	}
 	
 	// TODO - polling, notifications about new nodes / nodes removals
@@ -228,8 +283,9 @@ public class Topology {
 			Long pos = dn.getPosition();
 			if ( !newNodesIpsSet.contains(ip) ) {
 				//node was deleted
-				LOGGER.info("Removing node with IP " + ip + " and position " + pos + " from topology\n", ip, pos);
-				nodes.remove(ip);
+				System.out.print("Removing node with IP " + ip + " and position " + pos + " from topology\n");
+				LOGGER.info("Removing node with IP " + ip + " and position " + pos + " from topology\n");
+				this.deleteNode(dn);
 			}
 		}
 		//find new nodes
@@ -243,12 +299,14 @@ public class Topology {
 			}
 			else {
 				//new node
-				LOGGER.info("Adding node with IP " + ip + " and position " + pos + " to topology\n", ip, pos);
-				synchronized (nodes) {
-					nodes.add(new DynamoNode(ip, pos));
-				}
+				System.out.print("Removing node with IP " + ip + " and position " + pos + " from topology\n");
+				LOGGER.info("Adding node with IP " + ip + " and position " + pos + " to topology\n");
+				this.addNode(new DynamoNode(ip, pos));
 			}
 		}
+		
+		this.printDynamoNodesToLogger();
+		
 	}
 	
 	private void consulServiceRegister(Long position) {
@@ -271,6 +329,21 @@ public class Topology {
 
 		System.out.printf("Consul register: 'http://%s:8081/healthcheck'.\n", this.hostname);
 		consulClient.agentServiceRegister(newService);
+		
+	}
+	
+	public void printDynamoNodesToLogger() {
+		
+		StringBuilder sb = new StringBuilder();
+		int i = 0;
+		while (nodes.iterator().hasNext()) {
+			DynamoNode dn = nodes.iterator().next();
+			sb.append(String.format(
+					"Dynamo node[" + i + "] has IP " + dn.getIp() + " and Position " + dn.getPosition() + ".\n"));
+			i++;
+		}
+		System.out.print(sb.toString());
+		LOGGER.info(sb.toString());
 		
 	}
 

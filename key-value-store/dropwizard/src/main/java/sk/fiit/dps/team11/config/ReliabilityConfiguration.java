@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReliabilityConfiguration {
 
-	private int numReplicas = 3;
+	private int numReplicas = 1;
 	
 	private int responseTimeoutMillis = 500;
 	
