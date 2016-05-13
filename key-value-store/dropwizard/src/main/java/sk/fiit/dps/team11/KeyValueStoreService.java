@@ -1,7 +1,6 @@
 package sk.fiit.dps.team11;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -36,6 +35,7 @@ import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
 import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
+import sk.fiit.dps.team11.resources.PingResource;
 import sk.fiit.dps.team11.resources.StorageResource;
 import sk.fiit.dps.team11.workers.DataManipulationWorker;
 import sk.fiit.dps.team11.workers.GlobalMetricsWorker;
@@ -63,14 +63,13 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		BrokerService brokerService = new BrokerService();
 		try {
 			String localIp = InetAddress.getLocalHost().getHostAddress();
-			System.out.printf("Host IP address is '%s'\n.", localIp);
+			LOGGER.info("Host IP address is '%s'\n.", localIp);
 			brokerService.addConnector(String.format("tcp://%s:61616", localIp));
 			brokerService.setBrokerName("local-mq");
 			brokerService.setPersistent(false);
 			brokerService.start();
 		} catch (Exception e) {
-			LOGGER.error("Couldn't initialize Message queue");
-			e.printStackTrace();
+			LOGGER.error("Couldn't initialize Message queue", e);
 			System.exit(1);
 		}
 		
@@ -133,6 +132,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 
 		// Resources
 		environment.jersey().register(StorageResource.class);
+		environment.jersey().register(PingResource.class);
 		environment.jersey().register(CheckConnectivityResource.class);
 		
 		// Queue workers

@@ -1,9 +1,3 @@
-import static java.util.stream.Collectors.toList;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -14,16 +8,25 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.client.ClientProperties;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
+
+import static org.junit.Assert.assertThat;
+
+import static java.util.stream.Collectors.toList;
 
 import sk.fiit.dps.team11.core.Version;
 import sk.fiit.dps.team11.core.Version.Comp;
@@ -33,6 +36,8 @@ import sk.fiit.dps.team11.models.PutRequest;
 import sk.fiit.dps.team11.models.PutResponse;
 
 public class TestStorage {
+	
+	private static final String URL = "http://localhost:8080/";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestStorage.class);
 	
@@ -50,12 +55,27 @@ public class TestStorage {
 	
 	private WebTarget target;
 	
+	@BeforeClass
+	public static void onlyRunIfServerRuns() {
+		try {
+			Response response = ClientBuilder.newClient()
+				.property(ClientProperties.CONNECT_TIMEOUT, 100)
+				.property(ClientProperties.READ_TIMEOUT, 100)
+				.target(URL + "ping")
+				.request()
+				.get();
+			Assume.assumeThat(response.getStatusInfo().getStatusCode(), equalTo(Status.OK.getStatusCode()));
+		} catch (Exception e) {
+			Assume.assumeNoException(e);
+		}
+	}
+	
 	@Before
 	public void prepare() {
 		target = ClientBuilder.newClient()
 			.property(ClientProperties.CONNECT_TIMEOUT, 5000)
 			.property(ClientProperties.READ_TIMEOUT, 5000)
-			.target("http://localhost:8080/storage");
+			.target(URL + "storage");
 	}
 	
 	private PutResponse put(PutRequest request) throws Exception {
@@ -92,7 +112,7 @@ public class TestStorage {
 		// Put new value
 		PutResponse resp = put(new PutRequest(key, value, cur.getValue().getVersion(), MIN_NUM_RW));
 		
-		assertThat(resp.isSuccess(), is(true));
+		assertThat(resp.isSuccess(), equalTo(true));
 		
 	}
 
@@ -109,7 +129,7 @@ public class TestStorage {
 
 		PutResponse resp = put(new PutRequest(key, value, Version.INITIAL, MIN_NUM_RW));
 		
-		assertThat(resp.isSuccess(), is(false));
+		assertThat(resp.isSuccess(), equalTo(false));
 		
 	}
 
