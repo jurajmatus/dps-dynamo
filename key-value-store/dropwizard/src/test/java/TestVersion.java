@@ -18,8 +18,8 @@ import sk.fiit.dps.team11.core.Version;
 
 public class TestVersion {
 
-	public static DynamoNode NODE_1 = new DynamoNode("128.192.156.20", 100);
-	public static DynamoNode NODE_2 = new DynamoNode("156.12.39.10", 100000);
+	public static DynamoNode NODE_1 = new DynamoNode("128.192.156.20", 100L);
+	public static DynamoNode NODE_2 = new DynamoNode("156.12.39.10", 100000L);
 	
 	public static ObjectMapper MAPPER = new ObjectMapper();
 	
@@ -96,8 +96,8 @@ public class TestVersion {
 		Random r = new Random();
 		
 		for (int i = 0; i < 10; i++) {
-			v1 = v1.increment(new DynamoNode(InetAddresses.fromInteger(r.nextInt()).getHostAddress(), r.nextInt()));
-			v2 = v2.increment(new DynamoNode(InetAddresses.fromInteger(r.nextInt()).getHostAddress(), r.nextInt()));
+			v1 = v1.increment(new DynamoNode(InetAddresses.fromInteger(r.nextInt()).getHostAddress(), r.nextLong()));
+			v2 = v2.increment(new DynamoNode(InetAddresses.fromInteger(r.nextInt()).getHostAddress(), r.nextLong()));
 		}
 		
 		Version merged = v1.merge(v2);
