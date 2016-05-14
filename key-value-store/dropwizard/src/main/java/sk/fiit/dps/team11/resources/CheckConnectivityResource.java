@@ -10,9 +10,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,8 +21,6 @@ import sk.fiit.dps.team11.models.ConsulHealth;
 
 @Path("/check_connectivity")
 public class CheckConnectivityResource {
-	
-	private static final Logger LOGGER = LoggerFactory.getLogger(CheckConnectivityResource.class);
 	
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	
