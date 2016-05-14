@@ -15,7 +15,7 @@ To run this application, you need to have basic docker tooling installed:
 * [docker](https://docs.docker.com/engine/installation/)
 * [docker-compose](https://docs.docker.com/compose/install/)
 * [docker-machine](https://docs.docker.com/machine/install-machine/)
-* [weave](https://github.com/weaveworks/weave#installation)
+* [weave](https://www.weave.works/docs/net/latest/installing-weave/)
 
 ### Build & run
 
@@ -26,17 +26,39 @@ git clone https://github.com/jurajmatus/dps-dynamo.git
 cd dps-dynamo
 ```
 
-Deploying Master
+The default configuration is for the application to be split into two machines:
+* Master
+  * service discovery
+  * logging and monitoring service
+* Slave
+  * Dynamo nodes
+
+To build and run the master, run the following commands:
 ```bash
 docker-machine create -d virtualbox master
-docker-machine ssh master
-sudo -i
-echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp  # routes ARP requests from docker-machine to docker containers
+# routes ARP requests from docker-machine to docker containers
+echo 'sudo -i; echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp' | docker-machine ssh master
 eval $(docker-machine env master)
 weave launch
 eval "$(weave env)"
 docker-compose -f master.yml build
+
+# Run - still from the same shell
 docker-compose -f master.yml up
+```
+
+To build and run the slave, run the following commands:
+```bash
+docker-machine create -d virtualbox slave
+# routes ARP requests from docker-machine to docker containers
+echo 'sudo -i; echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp' | docker-machine ssh master
+eval $(docker-machine env slave)
+weave launch $(docker-machine ip master)
+eval "$(weave env)"
+docker-compose -f slave.yml build
+
+# Run - still from the same shell
+docker-compose -f slave.yml scale key-value-store=2
 #weave expose
 ```
 
@@ -47,20 +69,6 @@ docker-compose -f master.yml rm --all
 weave stop
 weave reset
 eval "$(weave env --restore)"
-```
-
-Deploying Slave
-```bash
-docker-machine create -d virtualbox slave
-docker-machine ssh slave
-sudo -i
-echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp  # routes ARP requests from docker-machine to docker containers
-eval $(docker-machine env slave)
-weave launch $(docker-machine ip master)
-eval "$(weave env)"
-docker-compose -f slave.yml build
-docker-compose -f slave.yml scale key-value-store=2
-#weave expose
 ```
 
 Cleaning Slave
@@ -174,15 +182,27 @@ For asynchronous messaging we use [ActiveMQ](http://activemq.apache.org/). Every
 
 #### Partitioning
 
-TODO
+Values are partitioned based on their key. The key is hashed via **md5** function and mapped into consistent hash space of 64 bits.
 
 #### Versioning
 
-TODO
+Each value has a version string associated with it, which is internally a **vector clock**.
+Vector clock contains up to 10 entries of node's ip address, version number and timestamp. Timestamp is not used in conflict resolution algortithm, it only serves to find oldest entries when trimming is performed.
 
 #### Execution
 
-TODO
+Upon receiving of a request, the coordinator for the key is computed. If the receiving node is not responsible for it, the request is **redirected** to one of the responsible nodes via http protocol.
+
+If the node is responsible, **request id** is generated for tracking and **state machine** is created for the request.
+All subsequent operations are then offloaded to **message queue** workers.
+
+Nodes responsible for the key are computed and contacted via message queue to either replicate (PUT) or provide the value (GET). Version resolution is performed before writes and after collecting all reads. Based on the result of it, either the value is used as is, is merged or is rejected.
+
+Internaly reads and writes are provided by BerkeleyDB. Reads are done non-transactionally. Writes are done **optimistically** - read is done, operations like version resolution are done, and then the value is written if change hasn't been done in the meantime. The last read-write is done in one transaction. If write fails, the whole sequence is repeated. This strategy was chosen to provide fast reads, but at the expense of possibility of failed writes.
+
+Upon receiving the **acknowledgement** number _w_ or _r_, response is sent back to the client. Timeout is checked. If it elapses, the topology is recomputed and new responsible nodes are contacted.
+
+Upon receiving the acknowledgement number _n_, state machine is discarded from internal storage. If timeout is exceeded, http error code is sent back to the client.
 
 #### Handling failure
 
