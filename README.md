@@ -11,7 +11,8 @@
 
 ### Prerequisites
 
-To run this application, you need to have basic docker tooling installed:
+To build and run this application, you need to have basic docker tooling installed:
+* [maven](https://maven.apache.org/install.html)
 * [docker](https://docs.docker.com/engine/installation/)
 * [docker-compose](https://docs.docker.com/compose/install/)
 * [docker-machine](https://docs.docker.com/machine/install-machine/)
@@ -23,7 +24,7 @@ Download the repository and create docker machines:
 
 ```bash
 git clone https://github.com/jurajmatus/dps-dynamo.git
-cd dps-dynamo
+cd dps-dynamo/docker-machine-weave
 ```
 
 The default configuration is for the application to be split into two machines:
@@ -55,11 +56,11 @@ echo 'sudo -i; echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp' | docker-machine 
 eval $(docker-machine env slave)
 weave launch $(docker-machine ip master)
 eval "$(weave env)"
+sh ../key-value-store/dropwizard/build.sh
 docker-compose -f slave.yml build
 
 # Run - still from the same shell
 docker-compose -f slave.yml scale key-value-store=2
-#weave expose
 ```
 
 Cleaning Master
@@ -92,7 +93,7 @@ curl $(weave dns-lookup haproxy | head -n1):8080/check_connectivity
 
 Firstly you need to know an address of application's end-point. All addresses listed will be relative to this:
 ```bash
-docker-machine ip master
+weave dns-lookup haproxy
 ```
 
 #### Get
