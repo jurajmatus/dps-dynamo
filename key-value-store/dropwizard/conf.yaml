@@ -28,7 +28,7 @@ metrics:
       rateUnit: seconds
       useRegexFilters: false
       frequency: 5 seconds
-      host: logging-server
+      host: logging-server.weave.local
       port: 2003
 activeMQ:
   brokerUrl: vm://local-mq

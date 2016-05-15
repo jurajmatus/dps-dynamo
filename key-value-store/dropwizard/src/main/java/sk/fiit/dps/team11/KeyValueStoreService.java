@@ -69,7 +69,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
 				bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
 		
-		String localIp = NetworkInterfaceUtility.getInterfaceIpAddress("ethwe0");
+		String localIp = NetworkInterfaceUtility.getInterfaceIpAddress("ethwe");
 		
 		BrokerService brokerService = new BrokerService();
 		try {

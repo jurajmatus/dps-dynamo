@@ -1,7 +1,0 @@
-{
-  "service": {
-    "name": "dynamo", 
-    "tags": ["ver0.1"], 
-    "port": 8080
-  }
-}

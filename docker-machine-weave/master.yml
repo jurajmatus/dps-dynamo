@@ -7,18 +7,18 @@ services:
         - "/etc/consul.d"
      container_name: "consul-server"
      hostname: "consul-server.weave.local"
-     network_mode: "weave"
+     #network_mode: "weave"
      restart: always
   haproxy:
      build: ../proxy-loadbalancer
      container_name: "haproxy"
      hostname: "haproxy.weave.local"
-     network_mode: "weave"
+     #network_mode: "weave"
      restart: always
   logging-server:
      build: ../logging
      restart: always
      container_name: "logging-server"
      hostname: "logging-server.weave.local"
-     network_mode: "weave"
+     #network_mode: "weave"
       

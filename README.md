@@ -46,6 +46,7 @@ docker-machine ssh master
 eval $(docker-machine env master)
 weave launch
 eval "$(weave env)"
+docker stop $(docker ps -a | grep "weaveplugin\|weavevolumes\|weavedb" | cut -f 1 -d " ")
 docker-compose -f master.yml build
 
 # Run - still from the same shell
@@ -65,6 +66,7 @@ docker-machine ssh slave
 eval $(docker-machine env slave)
 weave launch $(docker-machine ip master)
 eval "$(weave env)"
+docker stop $(docker ps -a | grep "weaveplugin\|weavevolumes\|weavedb" | cut -f 1 -d " ")
 bash ../key-value-store/dropwizard/build.sh     
 docker-compose -f slave.yml build
 
@@ -93,10 +95,10 @@ eval "$(weave env --restore)"
 Setup Host and test
 ```bash
 ip r add 10.32.0.0/12 dev vboxnet0	# adds route to Weave network from host computer
-curl $(weave dns-lookup consul-server | head -n1):8500/v1/catalog/nodes | python -m json.tool
-curl $(weave dns-lookup consul-server | head -n1):8500/v1/health/service/dynamo | python -m json.tool
-curl $(weave dns-lookup haproxy | head -n1):8080/check_connectivity
-#open logging in web browser: firefox http://$(weave dns-lookup logging-server | head -n1)/login, firefox http://$(weave dns-lookup logging-server | head -n1)/loganalyzer
+curl $(weave dns-lookup consul-server.weave.local | head -n1):8500/v1/catalog/nodes | python -m json.tool
+curl $(weave dns-lookup consul-server.weave.local | head -n1):8500/v1/health/service/dynamo | python -m json.tool
+curl $(weave dns-lookup haproxy.weave.local | head -n1):8080/check_connectivity
+#open logging in web browser: firefox http://$(weave dns-lookup logging-server.weave.local | head -n1)/login, firefox http://$(weave dns-lookup logging-server.weave.local | head -n1)/loganalyzer
 ```
 
 ### API

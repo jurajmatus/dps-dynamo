@@ -31,6 +31,7 @@ public class NetworkInterfaceUtility {
 			interf = NetworkInterface.getByName(netwInterfaceName);
 		}
 		catch (SocketException e) {
+			System.err.printf("Cannot get IP address of network interface '%s'.\n%s", netwInterfaceName, e);
 			LOGGER.error("Cannot get IP address of network interface {}", netwInterfaceName, e);
 		}
 	

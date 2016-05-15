@@ -115,9 +115,11 @@ public class StorageResource {
 		
 		try {
 			db.forEach( (key, value) -> {
-				array.add(mapper.createArrayNode().
+				if ( value.getValues().size() > 0 ) {
+					array.add(mapper.createArrayNode().
 						add(key).
-						add(value.getValues().get(value.getValues().size()-1).data)); 
+						add(value.getValues().get(value.getValues().size() -1 ).data));
+				}
 			});
 		} catch (DatabaseException e) {
 			LOGGER.error("", e);

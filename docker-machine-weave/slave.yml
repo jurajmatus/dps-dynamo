@@ -2,6 +2,6 @@ version: '2'
 services:
   key-value-store:
      build: ../key-value-store
-     network_mode: "weave"
+     #network_mode: "weave"
      restart: always
 

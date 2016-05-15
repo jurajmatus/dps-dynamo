@@ -53,6 +53,7 @@ public class Topology {
 	private final int MIN_NUM_RW = 1;
 	
 	ConsulClient consulClient;
+	String consulHostname = "consul-server.weave.local";
 	
 	String myIpAddr;
 	String hostname;
@@ -74,7 +75,7 @@ public class Topology {
 	@PostConstruct
 	private void init() {
 		//Gets IP address of interface ethwe0
-		String interfaceAddr = "ethwe0";
+		String interfaceAddr = "ethwe";
 		this.myIpAddr = null;
 		NetworkInterface interf = null;
 		
@@ -82,6 +83,7 @@ public class Topology {
 			interf = NetworkInterface.getByName(interfaceAddr);
 		}
 		catch (SocketException e) {
+			System.err.printf("Cannot get IP address of network interface '%s'.\n%s", interfaceAddr, e);
 			LOGGER.error("Cannot get IP address of network interface '{}'", interfaceAddr, e);
 			System.exit(-1);
 		}
@@ -124,7 +126,7 @@ public class Topology {
 			
 			Long myPosition = new Long(new Random().nextLong());
 
-			consulClient = new ConsulClient("consul-server");
+			consulClient = new ConsulClient(consulHostname);
 			consulServiceRegister(myPosition);
 			
 			self = new DynamoNode(myIpAddr, myPosition);
@@ -224,7 +226,7 @@ public class Topology {
 			}*/
 			
 			for (int i = 0; i < numReplicas() - 1 ; i++) {
-				int circularIndex = (firstResponsibleNodeIndex - i) % dynamoNodeArray.length; 
+				int circularIndex = (firstResponsibleNodeIndex - i - 1) % dynamoNodeArray.length; 
 				responsibleNodes.add(dynamoNodeArray[circularIndex]);
 			}
 		}
@@ -253,7 +255,7 @@ public class Topology {
     		while (true) {
 				SortedSet<DynamoNode> activeDynamoNodes = new TreeSet<DynamoNode>();
 		
-				String uri = "http://consul-server:8500/v1/health/service/dynamo";
+				String uri = String.format("http://%s:8500/v1/health/service/dynamo", consulHostname);
 				WebTarget target = ClientBuilder.newClient()
 						.target(uri);
 			    target.property(ClientProperties.CONNECT_TIMEOUT, 5000);
