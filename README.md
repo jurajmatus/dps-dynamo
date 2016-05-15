@@ -38,7 +38,11 @@ To build and run the master, run the following commands:
 ```bash
 docker-machine create -d virtualbox master
 # routes ARP requests from docker-machine to docker containers
-echo 'sudo -i; echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp' | docker-machine ssh master
+docker-machine ssh master
+ sudo -i
+  echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
+  exit
+ exit
 eval $(docker-machine env master)
 weave launch
 eval "$(weave env)"
@@ -53,7 +57,11 @@ To build and run the slave, run the following commands:
 ```bash
 docker-machine create -d virtualbox slave
 # routes ARP requests from docker-machine to docker containers
-echo 'sudo -i; echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp' | docker-machine ssh master
+docker-machine ssh slave
+ sudo -i
+  echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
+  exit
+ exit
 eval $(docker-machine env slave)
 weave launch $(docker-machine ip master)
 eval "$(weave env)"
