@@ -42,7 +42,7 @@ ADD ./apache/ports.conf /etc/apache2/ports.conf
 ADD ./apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Loganalyzer
-RUN rm -rf /var/www & mkdir -p /var/www
+RUN rm -rf /var/www && mkdir -p /var/www
 ADD ./loganalyzer-3.6.6/src /var/www/
 RUN chmod 666 /var/www/config.php
 
