@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -18,9 +19,12 @@ import java.util.TreeSet;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +36,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.net.InetAddresses;
+import com.sleepycat.je.DatabaseException;
 
 import sk.fiit.dps.team11.config.TopConfiguration;
+import sk.fiit.dps.team11.models.PutRequest;
+import sk.fiit.dps.team11.models.PutResponse;
 
 public class Topology {
 	
@@ -50,6 +57,9 @@ public class Topology {
 	
 	@Inject
 	private TopConfiguration conf;
+	
+	@Inject
+	private DatabaseAdapter db;
 	
 	private final ObjectMapper MAPPER = new ObjectMapper();
 	
@@ -137,8 +147,9 @@ public class Topology {
 		DynamoNode actualNode;
 		
 		synchronized (nodes) {
-			while (this.nodes.iterator().hasNext()) {
-				actualNode = this.nodes.iterator().next();
+			Iterator<DynamoNode> it = this.nodes.iterator();
+			while (it.hasNext()) {
+				actualNode = it.next();
 				if ( actualNode.getPosition() > hash ) {
 					//First node with higher position in sorted set is responsible for hash key
 					responsibleNode = actualNode;
@@ -150,13 +161,15 @@ public class Topology {
 			}
 		}
 		
-		LOGGER.info("Checking if key '{}' belongs to my node [{}+ {}]", hash,
+		LOGGER.info("isMy: Checking if key '{}' belongs to my node [{};{}]", hash,
 				self.getIp(), self.getPosition());
 		
 		if ( responsibleNode.equals(this.self) ) {
+			LOGGER.info("Key belongs to me");
 			return true;
 		}
 		else {
+			LOGGER.info("Key does not belong to me");
 			return false;
 		}
 		
@@ -210,7 +223,7 @@ public class Topology {
 		}
 		
 		try {
-			LOGGER.info("Responsible nodes for key {} are {}", hash, MAPPER.writeValueAsString(responsibleNodes));
+			LOGGER.info("nodesForKey: Responsible nodes for key {} are {}", hash, MAPPER.writeValueAsString(responsibleNodes));
 		} catch (JsonProcessingException e) {}
 		
 		return responsibleNodes;
@@ -316,17 +329,96 @@ public class Topology {
 		}
 		
 	}
-	
-	private void addNode(DynamoNode node) {
+
+	/**
+	 * 
+	 * Adds node to node list. If newNode is previous to self, move items for which the new node is responsible
+	 * @param newNode
+	 */
+	private void addNode(DynamoNode newNode) {
+
 		synchronized (nodes) {
-			nodes.add(node);
+			TreeSet<DynamoNode> nodesTmp = (TreeSet<DynamoNode>) nodes;
+			nodesTmp.add(newNode);
+			
+			if ( nodesTmp.last().equals(newNode) ) {
+				// if new node will be new last in set
+				if ( nodesTmp.first().equals(self) ) {
+					// and I am first 
+					this.moveItems(self, newNode);
+				}
+			}
+			else {
+				// if new node is not last
+				DynamoNode previousNode = nodesTmp.first();
+				Iterator<DynamoNode> it = nodesTmp.iterator();
+				if ( it.hasNext() ) 
+					it.next();
+				
+				while ( it.hasNext() ) {
+					// find if I have key overlap with new node
+					DynamoNode dn = it.next();
+					if ( newNode.equals(previousNode) ) {
+						if (dn.equals(self)) {
+							this.moveItems(self, newNode);
+							break;
+						}
+					}
+					previousNode = dn;
+				}
+			}
+			nodes.add(newNode);
 		}
 	}
 	
+	private PutResponse put(PutRequest request, WebTarget target) throws Exception {
+		Response response = target.request().buildPut(Entity.entity(request, MediaType.APPLICATION_JSON)).invoke();
+		
+		PutResponse resp = response.readEntity(PutResponse.class);
+		
+		return resp;
+	}
+	
+	private void moveItems(DynamoNode resendingNode, DynamoNode newNode) {
+		//resending node is one node after newNode
+		
+		int MIN_NUM_RW = 1;
+		String URL = String.format("http://%s:8080/", newNode.getIp());
+		WebTarget target = ClientBuilder.newClient()
+				.property(ClientProperties.CONNECT_TIMEOUT, 5000)
+				.property(ClientProperties.READ_TIMEOUT, 5000)
+				.target(URL + "storage");
+		
+
+		try {
+			db.forEach( (key, value) -> {
+				ByteBuffer bb = ByteBuffer.wrap(key);
+				if ( (bb.getLong() <= newNode.getPosition()) && (bb.getLong() > resendingNode.getPosition()) ) {
+					LOGGER.info("Sending overlaped data[K:{};V:{}] to new node[{},{}]", 
+							key, value.getValues().get(value.getValues().size() - 1).data, 
+							newNode.getIp(), newNode.getPosition());
+					PutResponse resp;
+					try {
+						resp = put(new PutRequest(key, 
+								value.getValues().get(value.getValues().size() - 1).data, 
+								value.getVersion(),	MIN_NUM_RW), 
+								target);
+					} catch (Exception e) {
+						LOGGER.error("", e);
+					}
+				}
+			});
+		} catch (DatabaseException e) {
+			LOGGER.error("", e);
+		}
+		
+	}
+		
 	private void deleteNode(DynamoNode node) {
 		synchronized (nodes) {
 			nodes.remove(node);
 		}
+		
 	}
 	
 	private void updateTopology(SortedSet<DynamoNode> newNodesSet) {

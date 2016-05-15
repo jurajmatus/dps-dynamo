@@ -46,6 +46,7 @@ docker-compose -f master.yml build
 
 # Run - still from the same shell
 docker-compose -f master.yml up
+weave expose
 ```
 
 To build and run the slave, run the following commands:
@@ -61,6 +62,7 @@ docker-compose -f slave.yml build
 
 # Run - still from the same shell
 docker-compose -f slave.yml scale key-value-store=2
+weave expose
 ```
 
 Cleaning Master

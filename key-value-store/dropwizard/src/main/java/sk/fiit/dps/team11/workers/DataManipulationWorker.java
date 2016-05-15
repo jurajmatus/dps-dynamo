@@ -69,10 +69,8 @@ public class DataManipulationWorker {
 			m(MetricRegistry::meter, "coordinator-put").mark();
 			
 			PutRequest req = s.getRequest();
-			
-			System.out.printf("Inserting item: KEY='%s', VAL='%s', VERSION='%s'\n", 
-					req.getKey(), req.getValue(), req.getFromVersion());
-			LOGGER.info("Inserting item: KEY='%s', VAL='%s', VERSION='%s'\n", 
+
+			LOGGER.info("Inserting item: KEY='{}', VAL='{}', VERSION='{}'\n", 
 					req.getKey(), req.getValue(), req.getFromVersion());
 			
 			VersionedValue oldValue = db.get(req.getKey());

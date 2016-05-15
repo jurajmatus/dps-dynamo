@@ -69,6 +69,8 @@ public class StorageExecutor {
 		}
 		
 		DynamoNode coordinatorNode = nodes.get(0);
+		LOGGER.info("Key {} is in responsibility of node[{};{}], not my -- redirecting request", 
+				new String(request.getKey()), coordinatorNode.getIp(), coordinatorNode.getPosition());
 
 		HttpServletRequest servletRequest = request.getServletRequest();
 		String url = UriBuilder.fromUri(servletRequest.getRequestURI())

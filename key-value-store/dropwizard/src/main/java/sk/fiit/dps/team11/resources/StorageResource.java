@@ -13,14 +13,23 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.gson.JsonArray;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
+import com.sleepycat.je.DatabaseException;
 
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
+import sk.fiit.dps.team11.core.DatabaseAdapter;
 import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
@@ -86,6 +95,39 @@ public class StorageResource {
 			replicaFinderWorker.send(s.getRequestId());
 			getWorker.send(s.getRequestId());
 		});
+		
+	}
+	
+	
+	@Inject
+	private DatabaseAdapter db;
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(StorageResource.class);
+	
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Timed(name = "GET")
+	@Path("get_all_data")
+	public void printAllDataToLogger() {
+		
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode array = mapper.createArrayNode();
+		
+		try {
+			db.forEach( (key, value) -> {
+				array.add(mapper.createArrayNode().
+						add(key).
+						add(value.getValues().get(value.getValues().size()-1).data)); 
+			});
+		} catch (DatabaseException e) {
+			LOGGER.error("", e);
+		}
+		
+		try {
+			LOGGER.info(mapper.writeValueAsString(array));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("", e);
+		}
 		
 	}
 	
