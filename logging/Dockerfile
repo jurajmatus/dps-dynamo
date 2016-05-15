@@ -34,7 +34,6 @@ python manage.py syncdb --noinput
 
 # Grafana
 ADD ./grafana/custom.ini /opt/grafana/conf/custom.ini
-ADD ./grafana/grafana.db /opt/grafana/data/grafana.db
 
 # Apache
 ADD ./apache/start.sh /usr/bin/start-apache.sh
@@ -47,16 +46,20 @@ RUN rm -rf /var/www & mkdir -p /var/www
 ADD ./loganalyzer-3.6.6/src /var/www/
 RUN chmod 666 /var/www/config.php
 
-# Nginx and supervisord
-ADD ./nginx/nginx.conf /etc/nginx/nginx.conf
-ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 # Consul
 RUN curl -o /tmp/consul.zip https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip && unzip /tmp/consul.zip -d /usr/bin/
 RUN mkdir -p /tmp/consul
 RUN mkdir -p /etc/consul.d
 ADD ./consul/config.json /etc/consul.d/
 ADD ./consul-services/logging.json /etc/consul.d/
+
+# Frequently changed - at the bottom to prevent installation rebuilds
+
+# Nginx and supervisord
+ADD ./nginx/nginx.conf /etc/nginx/nginx.conf
+ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+ADD ./grafana/grafana.db /opt/grafana/data/grafana.db
 
 # PORTS
 
