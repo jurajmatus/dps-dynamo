@@ -65,7 +65,7 @@ docker-machine ssh slave
 eval $(docker-machine env slave)
 weave launch $(docker-machine ip master)
 eval "$(weave env)"
-sh ../key-value-store/dropwizard/build.sh
+bash ../key-value-store/dropwizard/build.sh     
 docker-compose -f slave.yml build
 
 # Run - still from the same shell
