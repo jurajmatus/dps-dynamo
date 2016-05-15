@@ -6,11 +6,11 @@ public class ReliabilityConfiguration {
 
 	private int numReplicas = 2;
 	
-	private int responseTimeoutMillis = 500;
+	private int responseTimeoutMillis = 1000;
 	
-	private int nodeResponseTimeoutMillis = 200;
+	private int nodeResponseTimeoutMillis = 1000;
 	
-	private int topologyChangeTimeoutMillis = 1000;
+	private int topologyChangeTimeoutMillis = 1500;
 
 	@JsonProperty
 	public int getNumReplicas() {

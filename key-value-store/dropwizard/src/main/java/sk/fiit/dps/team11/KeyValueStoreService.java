@@ -1,6 +1,12 @@
 package sk.fiit.dps.team11;
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -17,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheck;
+import com.google.common.net.InetAddresses;
 import com.kjetland.dropwizard.activemq.ActiveMQBundle;
 
 import io.dropwizard.Application;
@@ -27,7 +34,9 @@ import io.dropwizard.setup.Environment;
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
+import sk.fiit.dps.team11.core.DynamoNode;
 import sk.fiit.dps.team11.core.MQ;
+import sk.fiit.dps.team11.core.NetworkInterfaceUtility;
 import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.core.Topology;
 import sk.fiit.dps.team11.core.VersionResolution;
@@ -60,10 +69,12 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 		bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
 				bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
 		
+		String localIp = NetworkInterfaceUtility.getInterfaceIpAddress("ethwe0");
+		
 		BrokerService brokerService = new BrokerService();
 		try {
-			String localIp = InetAddress.getLocalHost().getHostAddress();
-			LOGGER.info("Host IP address is '%s'\n.", localIp);
+			System.out.printf("Active MQ Broker trying to bind to host IP address %s\n.", localIp);
+			LOGGER.info("Active MQ Broker trying to bind to host IP address {}\n.", localIp);
 			brokerService.addConnector(String.format("tcp://%s:61616", localIp));
 			brokerService.setBrokerName("local-mq");
 			brokerService.setPersistent(false);

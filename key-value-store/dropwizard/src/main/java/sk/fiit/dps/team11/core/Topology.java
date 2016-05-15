@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -48,12 +50,15 @@ public class Topology {
 	
 	private final static HashFunction MD5 = Hashing.md5();
 	
+	private final int MIN_NUM_RW = 1;
+	
 	ConsulClient consulClient;
 	
 	String myIpAddr;
 	String hostname;
 
-	Thread pollThread;
+	@Inject
+	private ScheduledExecutorService execService;
 	
 	@Inject
 	private TopConfiguration conf;
@@ -77,8 +82,7 @@ public class Topology {
 			interf = NetworkInterface.getByName(interfaceAddr);
 		}
 		catch (SocketException e) {
-			LOGGER.error("Cannot get IP address of network interface. Returned IP is '{}'", myIpAddr, e);
-			e.printStackTrace();
+			LOGGER.error("Cannot get IP address of network interface '{}'", interfaceAddr, e);
 			System.exit(-1);
 		}
 		
@@ -127,8 +131,8 @@ public class Topology {
 			nodes.add(self);
 		}
 		
-		pollThread = new Thread(poll);
-		pollThread.start();
+		execService.scheduleAtFixedRate(this.poll, 0, conf.getReliability().getTopologyChangeTimeoutMillis(),
+				TimeUnit.MILLISECONDS);	
 
 	}
 	
@@ -204,18 +208,21 @@ public class Topology {
 		long hash = getPositionInChord(key);
 		List<DynamoNode> responsibleNodes = new ArrayList<DynamoNode>();
 		
-		DynamoNode[] dynamoNodeArray = (DynamoNode[]) nodes.toArray();
+		DynamoNode[] dynamoNodeArray = nodes.toArray(new DynamoNode[0]);
 		int firstResponsibleNodeIndex = 0;
 		
 		synchronized (nodes) {
 			for (int i = 0; i < dynamoNodeArray.length; i++) {
-				if ( dynamoNodeArray[i].getPosition() > hash ) {
+				if ( dynamoNodeArray[i].getPosition() >= hash ) {
 					//First node with higher position in sorted set is responsible for hash key
 					firstResponsibleNodeIndex = i;
 					break;
 				}
 			}
 
+			/*if ( numReplicas() - 1 > nodes.size() ) {	
+			}*/
+			
 			for (int i = 0; i < numReplicas() - 1 ; i++) {
 				int circularIndex = (firstResponsibleNodeIndex - i) % dynamoNodeArray.length; 
 				responsibleNodes.add(dynamoNodeArray[circularIndex]);
@@ -232,25 +239,25 @@ public class Topology {
 	
 	public void notifyFailedNode(DynamoNode node) {
 		// The whole topology will be rescanned
-		//this.poll();
+		// this.poll();
 	}
 
 	Runnable poll = new Runnable() {
     	@Override
     	public void run() {
     		try {
-				Thread.sleep(25000);
+				Thread.sleep(20000);
 			} catch (InterruptedException e1) {
 				LOGGER.error("", e1);
 			}
     		while (true) {
-    			//LOGGER.info("Polling consul");
 				SortedSet<DynamoNode> activeDynamoNodes = new TreeSet<DynamoNode>();
 		
 				String uri = "http://consul-server:8500/v1/health/service/dynamo";
 				WebTarget target = ClientBuilder.newClient()
 						.target(uri);
-				
+			    target.property(ClientProperties.CONNECT_TIMEOUT, 5000);
+			    target.property(ClientProperties.READ_TIMEOUT,    5000);
 				Response response = target.request().get();
 
 				JsonNode responseJson;
@@ -273,19 +280,9 @@ public class Topology {
 								activeDynamoNodes.add(
 										new DynamoNode(ipAddr.textValue(), Long.valueOf(position.textValue())));
 							}
-							
-							/*LOGGER.info("Topology Poll: services: HOSTNAME[{}] IP[{}] POS[{}] "
-									+ "SERF_STATUS[{}] SERV_STATUS[{}]", hostname.textValue(), ipAddr.textValue(), 
-									position.textValue(), serfReachability.textValue(), servReachability.textValue());*/
 						});
 					}
 				} catch (IOException e) {
-					LOGGER.error("", e);
-				}
-				
-				try {
-					LOGGER.info("Topology Poll: Active dynamo nodes are " + MAPPER.writeValueAsString(activeDynamoNodes));
-				} catch (JsonProcessingException e) {
 					LOGGER.error("", e);
 				}
 				
@@ -293,7 +290,7 @@ public class Topology {
 					compareTopology(activeDynamoNodes);
 				
 				try {
-					Thread.sleep(2000);
+					Thread.sleep(3000);
 				} catch (InterruptedException e) {
 					LOGGER.error("", e);
 				}
@@ -320,14 +317,55 @@ public class Topology {
 		}
 		
 		if ( nodesIps.equals(healthyNodesIps) ) {
-			//LOGGER.info("Topology did not change, checking again");
 			return;
 		}
 		else {
 			LOGGER.info("Topology changed, initiating topology rebuild");
+			try {
+				LOGGER.info("Topology change: Healthy dynamo nodes are " + MAPPER.writeValueAsString(healthyNodes));
+			} catch (JsonProcessingException e) {
+				LOGGER.error("", e);
+			}
 			updateTopology(healthyNodes);
 		}
+	}
+	
+	private void updateTopology(SortedSet<DynamoNode> newNodesSet) {
+
+		//find deleted nodes
+		Iterator<DynamoNode> it = nodes.iterator();
+		while ( it.hasNext() ) {
+			DynamoNode dn = it.next();
+			String ip = dn.getIp();
+			Long pos = dn.getPosition();
+			if ( !newNodesSet.contains(dn) ) {
+				//node was deleted
+				LOGGER.info("Removing node with IP {} and position {} from topology", ip, pos);
+				this.deleteNode(dn);
+			}
+			else {
+				;
+			}
+		}
 		
+		//find new nodes
+		it = newNodesSet.iterator();
+		while ( it.hasNext() ) {
+			DynamoNode dn = it.next();
+			String ip = dn.getIp();
+			Long pos = dn.getPosition();
+			if ( nodes.contains(dn) ) {
+				//node is already in dynamo
+				;
+			}
+			else {
+				//new node
+				LOGGER.info("Adding node with IP {} and position {} to topology", ip, pos);
+				this.addNode(new DynamoNode(ip, pos));
+			}
+		}
+		
+		this.printDynamoNodesToLogger();
 	}
 
 	/**
@@ -373,16 +411,13 @@ public class Topology {
 	
 	private PutResponse put(PutRequest request, WebTarget target) throws Exception {
 		Response response = target.request().buildPut(Entity.entity(request, MediaType.APPLICATION_JSON)).invoke();
-		
 		PutResponse resp = response.readEntity(PutResponse.class);
 		
 		return resp;
 	}
 	
 	private void moveItems(DynamoNode resendingNode, DynamoNode newNode) {
-		//resending node is one node after newNode
-		
-		int MIN_NUM_RW = 1;
+
 		String URL = String.format("http://%s:8080/", newNode.getIp());
 		WebTarget target = ClientBuilder.newClient()
 				.property(ClientProperties.CONNECT_TIMEOUT, 5000)
@@ -414,52 +449,50 @@ public class Topology {
 		
 	}
 		
-	private void deleteNode(DynamoNode node) {
+	private void deleteNode(DynamoNode oldNode) {
+		
+		ByteBuffer bb = ByteBuffer.allocate(Long.BYTES);	
+		List<DynamoNode> responsibleNodesList = 
+				new ArrayList<DynamoNode>(this.nodesForKey(bb.putLong(oldNode.getPosition()).array()));
+		
 		synchronized (nodes) {
-			nodes.remove(node);
-		}
-		
-	}
-	
-	private void updateTopology(SortedSet<DynamoNode> newNodesSet) {
+			if ( responsibleNodesList.get(1).equals(self) ) {
 
-		//find deleted nodes
-		Iterator<DynamoNode> it = nodes.iterator();
-		while ( it.hasNext() ) {
-			DynamoNode dn = it.next();
-			String ip = dn.getIp();
-			Long pos = dn.getPosition();
-			if ( !newNodesSet.contains(dn) ) {
-				//node was deleted
-				LOGGER.info("Removing node with IP {} and position {} from topology", ip, pos);
-				this.deleteNode(dn);
+				String URL = String.format("http://%s:8080/", responsibleNodesList.get(0).getIp());
+				WebTarget target = ClientBuilder.newClient()
+						.property(ClientProperties.CONNECT_TIMEOUT, 5000)
+						.property(ClientProperties.READ_TIMEOUT, 5000)
+						.target(URL + "storage");
+				
+				try {
+					db.forEach( (key, value) -> {
+						ByteBuffer keyBb = ByteBuffer.wrap(key);
+						if ( keyBb.getLong() > self.getPosition() ) {
+							LOGGER.info("Sending replicated data {} from failed node[IP:{},P:{}] to new responsible "
+									+ "node[IP:{};P:{}]", 
+									value.getValues().get(value.getValues().size() - 1).data, 
+									oldNode.getIp(), oldNode.getPosition(),
+									responsibleNodesList.get(0).getIp(), 
+									responsibleNodesList.get(0).getPosition());
+							PutResponse resp;
+							try {
+								resp = put(new PutRequest(key, 
+										value.getValues().get(value.getValues().size() - 1).data, 
+										value.getVersion(),	MIN_NUM_RW), 
+										target);
+							} catch (Exception e) {
+								LOGGER.error("", e);
+							}
+						}
+					});
+				} catch (DatabaseException e) {
+					LOGGER.error("", e);
+				}
 			}
-			else {
-				//LOGGER.info("OLD: Node[{};{}] is already in topology", ip, pos);
-				;
-			}
+			
+			nodes.remove(oldNode);
+			
 		}
-		
-		//find new nodes
-		it = newNodesSet.iterator();
-		while ( it.hasNext() ) {
-			DynamoNode dn = it.next();
-			String ip = dn.getIp();
-			Long pos = dn.getPosition();
-			if ( nodes.contains(dn) ) {
-				//node is already in dynamo
-				//LOGGER.info("NEW: Node[{};{}] is already in topology", ip, pos);
-				;
-			}
-			else {
-				//new node
-				LOGGER.info("Adding node with IP {} and position {} to topology", ip, pos);
-				this.addNode(new DynamoNode(ip, pos));
-			}
-		}
-		
-		this.printDynamoNodesToLogger();
-		
 	}
 	
 	private void consulServiceRegister(Long position) {

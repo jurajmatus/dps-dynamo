@@ -42,4 +42,4 @@ activeMQ:
 parallelism:
   numScheduledThreads: 2
 reliability:
-  numReplicas: 3
+  numReplicas: 2
