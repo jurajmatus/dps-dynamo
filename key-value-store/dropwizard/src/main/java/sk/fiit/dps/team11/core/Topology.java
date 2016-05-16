@@ -163,13 +163,13 @@ public class Topology {
 				}
 			}
 			if ( responsibleNode == null ) {
-				responsibleNode = this.nodes.last();
+				responsibleNode = this.nodes.first();
 			}
 		}
 		
 		LOGGER.info("isMy: Checking if key '{}' belongs to my node [{};{}]", hash,
 				self.getIp(), self.getPosition());
-		
+
 		if ( responsibleNode.equals(this.self) ) {
 			LOGGER.info("Key belongs to me");
 			return true;
@@ -209,6 +209,7 @@ public class Topology {
 		
 		long hash = getPositionInChord(key);
 		List<DynamoNode> responsibleNodes = new ArrayList<DynamoNode>();
+		int repNum = numReplicas() - 1;
 		
 		DynamoNode[] dynamoNodeArray = nodes.toArray(new DynamoNode[0]);
 		int firstResponsibleNodeIndex = 0;
@@ -222,11 +223,13 @@ public class Topology {
 				}
 			}
 
-			/*if ( numReplicas() - 1 > nodes.size() ) {	
-			}*/
+			if ( repNum > nodes.size() ) {
+				repNum = nodes.size();
+			}
 			
-			for (int i = 0; i < numReplicas() - 1 ; i++) {
-				int circularIndex = (firstResponsibleNodeIndex - i - 1) % dynamoNodeArray.length; 
+			for (int i = 0; i < repNum; i++) {
+				int circularIndex = (firstResponsibleNodeIndex - i) % dynamoNodeArray.length;
+				if (circularIndex < 0) circularIndex += dynamoNodeArray.length;
 				responsibleNodes.add(dynamoNodeArray[circularIndex]);
 			}
 		}
@@ -248,7 +251,7 @@ public class Topology {
     	@Override
     	public void run() {
     		try {
-				Thread.sleep(20000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e1) {
 				LOGGER.error("", e1);
 			}
@@ -279,8 +282,18 @@ public class Topology {
 							
 							if ( (servReachability.textValue().compareToIgnoreCase("passing") == 0) && 
 								(serfReachability.textValue().compareToIgnoreCase("passing") == 0) ) {
+								
 								activeDynamoNodes.add(
 										new DynamoNode(ipAddr.textValue(), Long.valueOf(position.textValue())));
+								
+							}
+							if ( (servReachability.textValue().compareToIgnoreCase("critical") == 0) && 
+								(serfReachability.textValue().compareToIgnoreCase("passing") == 0) ) {
+								DynamoNode dn = new DynamoNode(ipAddr.textValue(), Long.valueOf(position.textValue()));
+								if ( activeDynamoNodes.contains(dn) ) {
+									activeDynamoNodes.remove(dn);
+								}
+								
 							}
 						});
 					}
@@ -420,6 +433,9 @@ public class Topology {
 	
 	private void moveItems(DynamoNode resendingNode, DynamoNode newNode) {
 
+		LOGGER.info("Me: Node[{},{}] can have overlap with new node[{},{}]", 
+				resendingNode.getIp(), resendingNode.getPosition(),
+				newNode.getIp(), newNode.getPosition());
 		String URL = String.format("http://%s:8080/", newNode.getIp());
 		WebTarget target = ClientBuilder.newClient()
 				.property(ClientProperties.CONNECT_TIMEOUT, 5000)
@@ -458,8 +474,15 @@ public class Topology {
 				new ArrayList<DynamoNode>(this.nodesForKey(bb.putLong(oldNode.getPosition()).array()));
 		
 		synchronized (nodes) {
+			
+			if (responsibleNodesList.size() <= 1) {
+				nodes.remove(oldNode);
+				return;
+			}
+			
 			if ( responsibleNodesList.get(1).equals(self) ) {
-
+				LOGGER.info("Me: Node[{},{}] can have replicated data from deleted node[{},{}]", 
+						self.getIp(), self.getPosition(), oldNode.getIp(), oldNode.getPosition());
 				String URL = String.format("http://%s:8080/", responsibleNodesList.get(0).getIp());
 				WebTarget target = ClientBuilder.newClient()
 						.property(ClientProperties.CONNECT_TIMEOUT, 5000)

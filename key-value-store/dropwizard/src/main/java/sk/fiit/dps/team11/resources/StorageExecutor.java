@@ -66,13 +66,13 @@ public class StorageExecutor {
 	private void handleRedirect(AsyncResponse response) {
 		List<DynamoNode> nodes = topology.nodesForKey(request.getKey());
 		if (nodes.size() == 0) {
-			LOGGER.error("No node found for key {}", ByteBuffer.wrap(request.getKey()).getLong());
+			LOGGER.error("No node found for key {}", request.getKey());
 		}
 		
 		DynamoNode coordinatorNode = nodes.get(0);
 		try {
 			LOGGER.info("Key {}-{} is in responsibility of node[{};{}], not my -- redirecting request", 
-					ByteBuffer.wrap(request.getKey()).getLong(), new String(request.getKey(), "UTF-8"),
+					request.getKey(), new String(request.getKey(), "UTF-8"),
 					coordinatorNode.getIp(), coordinatorNode.getPosition());
 		} catch (UnsupportedEncodingException e1) {
 			LOGGER.error("", e1);
