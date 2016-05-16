@@ -5,8 +5,10 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -152,6 +154,12 @@ public class Topology {
 		DynamoNode responsibleNode = null;
 		DynamoNode actualNode;
 		
+		try {
+			LOGGER.info("ISMY: nodes: {}", MAPPER.writeValueAsString(nodes));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		
 		synchronized (nodes) {
 			Iterator<DynamoNode> it = this.nodes.iterator();
 			while (it.hasNext()) {
@@ -167,10 +175,11 @@ public class Topology {
 			}
 		}
 		
-		LOGGER.info("isMy: Checking if key '{}' belongs to my node [{};{}]", hash,
+		LOGGER.info("isMy: Checking if key '{}' for responsible node[{} , {}] equals to self [{} , {}]", hash,
+				responsibleNode.getIp(), responsibleNode.getPosition(),
 				self.getIp(), self.getPosition());
 
-		if ( responsibleNode.equals(this.self) ) {
+		if ( responsibleNode.equals(self) ) {
 			LOGGER.info("Key belongs to me");
 			return true;
 		}
@@ -207,9 +216,15 @@ public class Topology {
 	 */
 	public List<DynamoNode> nodesForKey(byte[] key) {
 		
+		try {
+			LOGGER.info("NODESFORKEY: nodes: {}", MAPPER.writeValueAsString(nodes));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		
 		long hash = getPositionInChord(key);
 		List<DynamoNode> responsibleNodes = new ArrayList<DynamoNode>();
-		int repNum = numReplicas() - 1;
+		int repNum = numReplicas();
 		
 		DynamoNode[] dynamoNodeArray = nodes.toArray(new DynamoNode[0]);
 		int firstResponsibleNodeIndex = 0;
@@ -243,18 +258,12 @@ public class Topology {
 	}
 	
 	public void notifyFailedNode(DynamoNode node) {
-		// The whole topology will be rescanned
 		// this.poll();
 	}
 
 	Runnable poll = new Runnable() {
     	@Override
     	public void run() {
-    		try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e1) {
-				LOGGER.error("", e1);
-			}
     		while (true) {
 				SortedSet<DynamoNode> activeDynamoNodes = new TreeSet<DynamoNode>();
 		
@@ -287,13 +296,15 @@ public class Topology {
 										new DynamoNode(ipAddr.textValue(), Long.valueOf(position.textValue())));
 								
 							}
-							if ( (servReachability.textValue().compareToIgnoreCase("critical") == 0) && 
-								(serfReachability.textValue().compareToIgnoreCase("passing") == 0) ) {
+							if ( servReachability.textValue().compareToIgnoreCase("critical") == 0 || 
+									serfReachability.textValue().compareToIgnoreCase("critical") == 0	) {
 								DynamoNode dn = new DynamoNode(ipAddr.textValue(), Long.valueOf(position.textValue()));
-								if ( activeDynamoNodes.contains(dn) ) {
-									activeDynamoNodes.remove(dn);
-								}
-								
+
+								activeDynamoNodes.forEach( c -> {
+									if ( c.equals(dn) ) {
+										activeDynamoNodes.remove(dn);
+									}
+								});
 							}
 						});
 					}
@@ -441,12 +452,32 @@ public class Topology {
 				.property(ClientProperties.CONNECT_TIMEOUT, 5000)
 				.property(ClientProperties.READ_TIMEOUT, 5000)
 				.target(URL + "storage");
-		
 
 		try {
 			db.forEach( (key, value) -> {
-				ByteBuffer bb = ByteBuffer.wrap(key);
-				if ( (bb.getLong() <= newNode.getPosition()) && (bb.getLong() > resendingNode.getPosition()) ) {
+				long keyPosition = MD5.hashBytes(key).asLong();
+				
+				LOGGER.info("MOVE: K:{}, PNew:{}, Pself:{}", keyPosition, 
+						newNode.getPosition(), resendingNode.getPosition());
+				
+				if ( resendingNode.equals(nodes.first()) ) {
+					if ( keyPosition > resendingNode.getPosition() ) {
+						LOGGER.info("Sending overlaped data[K:{};V:{}] to new node[{},{}]", 
+								key, value.getValues().get(value.getValues().size() - 1).data, 
+								newNode.getIp(), newNode.getPosition());
+						PutResponse resp;
+						try {
+							resp = put(new PutRequest(key, 
+									value.getValues().get(value.getValues().size() - 1).data, 
+									value.getVersion(),	MIN_NUM_RW), 
+									target);
+						} catch (Exception e) {
+							LOGGER.error("", e);
+						}
+					}
+				}
+				
+				if ( (keyPosition <= newNode.getPosition()) && (keyPosition > resendingNode.getPosition()) ) {
 					LOGGER.info("Sending overlaped data[K:{};V:{}] to new node[{},{}]", 
 							key, value.getValues().get(value.getValues().size() - 1).data, 
 							newNode.getIp(), newNode.getPosition());
@@ -469,19 +500,30 @@ public class Topology {
 		
 	private void deleteNode(DynamoNode oldNode) {
 		
-		ByteBuffer bb = ByteBuffer.allocate(Long.BYTES);	
-		List<DynamoNode> responsibleNodesList = 
-				new ArrayList<DynamoNode>(this.nodesForKey(bb.putLong(oldNode.getPosition()).array()));
-		
 		synchronized (nodes) {
 			
+			nodes.remove(oldNode);
+			//oldNode is now deleted from nodes list
+		
+			ByteBuffer bb = ByteBuffer.allocate(Long.BYTES);
+			List<DynamoNode> responsibleNodesList = 
+				new ArrayList<DynamoNode>(this.nodesForKey(bb.putLong(oldNode.getPosition()).array()));
+			
+			LOGGER.info("DELETE: Responsible nodes size for key is {}, min. is 2", responsibleNodesList.size());
 			if (responsibleNodesList.size() <= 1) {
-				nodes.remove(oldNode);
 				return;
 			}
 			
+			LOGGER.info("DELETE: Coordinator node is [IP:{} , P:{}] and self[IP:{} , P:{}]", 
+					responsibleNodesList.get(0).getIp(), responsibleNodesList.get(0).getPosition(),
+					self.getIp(), self.getPosition());
+			LOGGER.info("DELETE: First replication node is [IP:{} , P:{}] and self[IP:{} , P:{}]", 
+					responsibleNodesList.get(1).getIp(), responsibleNodesList.get(1).getPosition(),
+					self.getIp(), self.getPosition());
+			
+			//If I am replicator
 			if ( responsibleNodesList.get(1).equals(self) ) {
-				LOGGER.info("Me: Node[{},{}] can have replicated data from deleted node[{},{}]", 
+				LOGGER.info("DEL: Me-Node[{},{}] can have replicated data from deleted node[{},{}]", 
 						self.getIp(), self.getPosition(), oldNode.getIp(), oldNode.getPosition());
 				String URL = String.format("http://%s:8080/", responsibleNodesList.get(0).getIp());
 				WebTarget target = ClientBuilder.newClient()
@@ -491,8 +533,10 @@ public class Topology {
 				
 				try {
 					db.forEach( (key, value) -> {
-						ByteBuffer keyBb = ByteBuffer.wrap(key);
-						if ( keyBb.getLong() > self.getPosition() ) {
+						long keyPosition = MD5.hashBytes(key).asLong();
+						LOGGER.info("K:{} must be > Pself:{} ; POld:{}", keyPosition, 
+								oldNode.getPosition(), self.getPosition());
+						if ( keyPosition > self.getPosition() ) {
 							LOGGER.info("Sending replicated data {} from failed node[IP:{},P:{}] to new responsible "
 									+ "node[IP:{};P:{}]", 
 									value.getValues().get(value.getValues().size() - 1).data, 
@@ -514,8 +558,6 @@ public class Topology {
 					LOGGER.error("", e);
 				}
 			}
-			
-			nodes.remove(oldNode);
 			
 		}
 	}
@@ -551,7 +593,9 @@ public class Topology {
 	public void printDynamoNodesToLogger() {
 		try {
 			LOGGER.info("Current nodes in topology: \n{}", MAPPER.writeValueAsString(nodes));
-		} catch (JsonProcessingException e) {}
+		} catch (JsonProcessingException e) {
+			LOGGER.error("", e);
+		}
 		
 	}
 

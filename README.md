@@ -217,14 +217,12 @@ Upon receiving the **acknowledgement** number _w_ or _r_, response is sent back 
 
 Upon receiving the acknowledgement number _n_, state machine is discarded from internal storage. If timeout is exceeded, http error code is sent back to the client.
 
-#### Handling failure
-
-TODO: temporary, permanent
-
 #### Membership and failure detection
+Membership detection is done via service discovery in our case consul server. All nodes are registered in consul with their hostnames, IP adresses and positions in Dynamo. That means, all nodes can query consul for active and failing dynamo services and their positions. 
 
-TODO
+Application contacts consul every 3 seconds and asks for active and failing nodes and compares last active topology with result of query. If there is new active node or some of active nodes is failing, the topology is recreated and keys, which need to be redistributed to new nodes are redistributed with keeping replication active and keys from failing node which are replicated are moved from replicators to new responsible node within recreated topology.
 
-#### Adding and removing the nodes
+#### Handling failure
+Handling failure is done via replicator nodes. According to number of replication nodes parameter, there can be multiple replication nodes. In case of finding a node failure, the replicated data are send from first available replicator node in Dynamo (Chord) topology to node which will be responsible for failed node keys. 
 
-TODO
+Finding keys from failed node is easy, because we keep track of all nodes and their positions. So keys from failed node are keys lower than position of failed node and higher than position of node previous to failed node in sorted set. 

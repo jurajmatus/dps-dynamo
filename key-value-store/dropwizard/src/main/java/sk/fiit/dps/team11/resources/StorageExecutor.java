@@ -71,8 +71,9 @@ public class StorageExecutor {
 		
 		DynamoNode coordinatorNode = nodes.get(0);
 		try {
-			LOGGER.info("Key {}-{} is in responsibility of node[{};{}], not my -- redirecting request", 
+			LOGGER.info("Key {}-{} is in responsibility of node[{};{}], not my[{}{}] -- redirecting request", 
 					request.getKey(), new String(request.getKey(), "UTF-8"),
+					topology.self().getIp(), topology.self().getPosition(), 
 					coordinatorNode.getIp(), coordinatorNode.getPosition());
 		} catch (UnsupportedEncodingException e1) {
 			LOGGER.error("", e1);

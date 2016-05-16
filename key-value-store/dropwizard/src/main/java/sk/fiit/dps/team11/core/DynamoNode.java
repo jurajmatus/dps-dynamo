@@ -1,8 +1,15 @@
 package sk.fiit.dps.team11.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import sk.fiit.dps.team11.resources.StorageExecutor;
+
 public class DynamoNode implements Comparable<DynamoNode> {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(StorageExecutor.class);
 
 	private final String ip;
 	
@@ -54,7 +61,7 @@ public class DynamoNode implements Comparable<DynamoNode> {
 			return false;
 		}
 		
-		if ( (this.ip.compareToIgnoreCase( dn.ip ) == 0) && (this.position == dn.position) )
+		if ( (this.ip.compareToIgnoreCase(dn.ip) == 0) && (this.position.equals(dn.position)) )
 			return true;
 		else
 			return false;

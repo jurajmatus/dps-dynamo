@@ -39,7 +39,9 @@ public class ReplicaFinderWorker {
 	
 	private void handleState(RequestState<?> state) {
 		List<DynamoNode> nodesForKey = topology.nodesForKey(state.getRequest().getKey());
+		nodesForKey.remove(0);
 		state.addNodes(nodesForKey);
+
 
 		LOGGER.info("Will send replicas to the following nodes for request {}: {}", state.getRequestId(),
 				nodesForKey.stream().map(node -> node.getIp()).collect(toList()));

@@ -143,7 +143,9 @@ public class DatabaseAdapter implements Managed {
 				try {
 					VersionedValue value = MAPPER.readValue(dvalue.getData(), VersionedValue.class);
 					consumer.accept(dkey.getData(), value);
-				} catch (IOException e) {}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		} finally {
 			if (cursor != null) {
