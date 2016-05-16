@@ -56,6 +56,7 @@ weave expose
 
 To build and run the slave, run the following commands:
 ```bash
+docker network create --driver=bridge dockermachineweave_default
 docker-machine create -d virtualbox slave
 # routes ARP requests from docker-machine to docker containers
 docker-machine ssh slave
