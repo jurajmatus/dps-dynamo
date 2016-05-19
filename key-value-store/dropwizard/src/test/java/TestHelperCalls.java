@@ -7,11 +7,16 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.client.ClientProperties;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.hamcrest.Matchers.equalTo;
 
 import sk.fiit.dps.team11.core.Version;
 import sk.fiit.dps.team11.models.GetRequest;
@@ -27,6 +32,21 @@ public class TestHelperCalls {
 	private final static int MIN_NUM_RW = 1;
 	
 	private WebTarget target;
+	
+	@BeforeClass
+	public static void onlyRunIfServerRuns() {
+		try {
+			Response response = ClientBuilder.newClient()
+				.property(ClientProperties.CONNECT_TIMEOUT, 100)
+				.property(ClientProperties.READ_TIMEOUT, 100)
+				.target(URL + "ping")
+				.request()
+				.get();
+			Assume.assumeThat(response.getStatusInfo().getStatusCode(), equalTo(Status.OK.getStatusCode()));
+		} catch (Exception e) {
+			Assume.assumeNoException(e);
+		}
+	}
 	
 	@Before
 	public void prepare() {
