@@ -13,9 +13,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.client.ClientProperties;
 import org.javatuples.Pair;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.sleepycat.je.DatabaseException;
-
-import static java.util.stream.Collectors.toMap;
 
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
@@ -25,10 +25,6 @@ import sk.fiit.dps.team11.models.VersionedValue;
 
 @Path("/internal")
 public class InternalResource {
-	
-	public static class NodeDump extends HashMap<String, VersionedValue> {
-		private static final long serialVersionUID = -2237772615396856586L;
-	}
 	
 	@Inject
 	TopConfiguration conf;
@@ -42,7 +38,9 @@ public class InternalResource {
 	@Inject
 	DatabaseAdapter db;
 	
-	private <T> Stream<Pair<String, T>> aggregate(String path, Class<T> expectedClass) {
+	private final static ObjectWriter MAPPER = new ObjectMapper().writerWithDefaultPrettyPrinter();
+	
+	private <T> Stream<Pair<String, String>> aggregate(String path) {
 		String urlTpl = "http://%s:8080/internal/" + path;
 		
 		return topology.allNodes()
@@ -56,7 +54,7 @@ public class InternalResource {
 							.target(String.format(urlTpl, node.getIp()))
 							.request()
 							.get()
-							.readEntity(expectedClass));
+							.readEntity(String.class));
 				} catch (Exception e) {
 					return null;
 				}
@@ -65,8 +63,8 @@ public class InternalResource {
 	
 	@GET
 	@Path("dump/my")
-	public NodeDump dump() throws DatabaseException {
-		NodeDump all = new NodeDump();
+	public Map<String, VersionedValue> dump() throws DatabaseException {
+		Map<String, VersionedValue> all = new HashMap<>((int) db.numEntries() * 3);
 		db.forEach((key, val) -> {
 			all.put(Base64.encodeBase64String(key), val);
 		});
@@ -75,11 +73,19 @@ public class InternalResource {
 	
 	@GET
 	@Path("dump/all")
-	public Map<String, NodeDump> dumpAll() throws DatabaseException {
-		return Stream.concat(
-				Stream.of(new Pair<>(topology.self().getIp() ,dump())),
-				aggregate("dump/all", NodeDump.class)
-		).collect(toMap(pair -> pair.getValue0(), pair -> pair.getValue1()));
+	public String dumpAll() throws Exception {
+		StringBuilder all = new StringBuilder();
+		all.append(MAPPER.writeValueAsString(dump()));
+		all.append("\n\n");
+		
+		aggregate("dump").forEach(pair -> {
+			all.append(pair.getValue0());
+			all.append("\n");
+			all.append("######################");
+			all.append(pair.getValue1());
+		});
+		
+		return all.toString();
 	}
 	
 	@GET
@@ -96,9 +102,8 @@ public class InternalResource {
 	@GET
 	@Path("clear/all")
 	public boolean clearAll() throws DatabaseException {
-		return clear()
-			&& aggregate("clear/all", Boolean.class)
-				.allMatch(pair -> pair.getValue1().booleanValue());
+		aggregate("clear");
+		return clear();
 	}
 	
 }
