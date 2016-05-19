@@ -1,7 +1,6 @@
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Stream;
 
 import javax.ws.rs.client.ClientBuilder;
@@ -154,23 +153,6 @@ public class TestStorage {
 		GetResponse resp = get(key);
 		
 		assertThat(resp.getValue().getValues(), equalTo(Arrays.asList(new ByteArray(value))));
-		
-	}
-
-	@Test
-	public void testPut10Values() throws Exception {
-		
-		Random r = new Random();
-		
-		for (int i = 0; i < 10; i++) {
-			byte[] key = new byte[10];
-			r.nextBytes(key);
-			
-			byte[] value = new byte[25];
-			r.nextBytes(value);
-			
-			put(new PutRequest(key, value, Version.INITIAL, MIN_NUM_RW));
-		}
 		
 	}
 
