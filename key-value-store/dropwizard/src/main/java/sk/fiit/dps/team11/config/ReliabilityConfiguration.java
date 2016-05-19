@@ -6,9 +6,9 @@ public class ReliabilityConfiguration {
 
 	private int numReplicas = 2;
 	
-	private int responseTimeoutMillis = 1000;
+	private int responseTimeoutMillis = 3000;
 	
-	private int nodeResponseTimeoutMillis = 1000;
+	private int nodeResponseTimeoutMillis = 2000;
 	
 	private int topologyChangeTimeoutMillis = 1500;
 

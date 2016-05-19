@@ -7,7 +7,9 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.client.ClientProperties;
@@ -15,7 +17,6 @@ import org.javatuples.Pair;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.sleepycat.je.DatabaseException;
 
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
@@ -62,26 +63,32 @@ public class InternalResource {
 	}
 	
 	@GET
+	@Produces(MediaType.TEXT_PLAIN)
 	@Path("dump/my")
-	public Map<String, VersionedValue> dump() throws DatabaseException {
-		Map<String, VersionedValue> all = new HashMap<>((int) db.numEntries() * 3);
-		db.forEach((key, val) -> {
-			all.put(Base64.encodeBase64String(key), val);
-		});
-		return all;
+	public String dump() {
+		try {
+			Map<String, VersionedValue> all = new HashMap<>((int) db.numEntries() * 3);
+			db.forEach((key, val) -> {
+				all.put(Base64.encodeBase64String(key), val);
+			});
+			return MAPPER.writeValueAsString(all);
+		} catch (Exception e) {
+			return e.toString();
+		}
 	}
 	
 	@GET
+	@Produces(MediaType.TEXT_PLAIN)
 	@Path("dump/all")
 	public String dumpAll() throws Exception {
 		StringBuilder all = new StringBuilder();
-		all.append(MAPPER.writeValueAsString(dump()));
+		all.append(dump());
 		all.append("\n\n");
 		
-		aggregate("dump").forEach(pair -> {
+		aggregate("dump/my").forEach(pair -> {
 			all.append(pair.getValue0());
 			all.append("\n");
-			all.append("######################");
+			all.append("######################\n");
 			all.append(pair.getValue1());
 		});
 		
@@ -89,21 +96,32 @@ public class InternalResource {
 	}
 	
 	@GET
+	@Produces(MediaType.TEXT_PLAIN)
 	@Path("clear/my")
-	public boolean clear() {
+	public String clear() {
 		try {
 			db.clear();
-			return true;
-		} catch (DatabaseException e) {
-			return false;
+			return "true";
+		} catch (Exception e) {
+			return e.toString();
 		}
 	}
 	
 	@GET
+	@Produces(MediaType.TEXT_PLAIN)
 	@Path("clear/all")
-	public boolean clearAll() throws DatabaseException {
-		aggregate("clear");
-		return clear();
+	public String clearAll() {
+		StringBuilder all = new StringBuilder();
+		all.append(clear());
+		
+		aggregate("clear/my").forEach(pair -> {
+			all.append(pair.getValue0());
+			all.append("\n");
+			all.append("######################\n");
+			all.append(pair.getValue1());
+		});
+		
+		return all.toString();
 	}
 	
 }

@@ -27,7 +27,7 @@ import sk.fiit.dps.team11.models.PutResponse;
 public class TestHelperCalls {
 	
 	// private static final String URL = "http://localhost:8080/";
-	private static final String URL = "http://10.32.0.2:8080/";
+	private static final String URL = "http://10.32.0.3:8080/";
 	
 	private final static int MIN_NUM_RW = 1;
 	

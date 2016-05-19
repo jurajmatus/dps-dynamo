@@ -39,7 +39,7 @@ import sk.fiit.dps.team11.models.PutResponse;
 public class TestStorage {
 	
 	// private static final String URL = "http://localhost:8080/";
-	private static final String URL = "http://10.32.0.2:8080/";
+	private static final String URL = "http://10.32.0.3:8080/";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestStorage.class);
 	
