@@ -111,7 +111,13 @@ public class DataManipulationWorker {
 			mq.send(putMessage.getFrom(), "put-ack", new RemotePutAcknowledgement(
 				topology.self().getIp(), putMessage.getRequestId(), success));
 			
+			LOGGER.info("Received fresh put replication data message for request {}, success: {}",
+					putMessage.getRequestId(), success);
+			
 		}, isValueCurrent -> {
+			
+			LOGGER.info("Received stale put replication data message for request {}, success: {}",
+					putMessage.getRequestId(), isValueCurrent);
 			
 			metrics.get(MetricRegistry::meter, "replica-put").mark();
 			
@@ -123,6 +129,8 @@ public class DataManipulationWorker {
 
 	@MQListener(queue = "put-ack")
 	public void receivePutAck(RemotePutAcknowledgement putAck) {
+		
+		LOGGER.info("Received put replication acknowledgement for request {}", putAck.getRequestId());
 		
 		states.withState(putAck.getRequestId(), PutRequestState.class, s -> {
 			
@@ -158,10 +166,15 @@ public class DataManipulationWorker {
 		mq.send(getMessage.getFrom(), "get-ack", new RemoteGetAcknowledgement(
 				topology.self().getIp(), getMessage.getRequestId(), value));
 		
+		LOGGER.info("Received get replication data message for request {}, success: {}",
+				getMessage.getRequestId(), value);
+		
 	}
 
 	@MQListener(queue = "get-ack")
 	public void receiveGetAck(RemoteGetAcknowledgement getAck) {
+		
+		LOGGER.info("Received get replication acknowledgement for request {}", getAck.getRequestId());
 		
 		states.withState(getAck.getRequestId(), GetRequestState.class, s -> {
 			

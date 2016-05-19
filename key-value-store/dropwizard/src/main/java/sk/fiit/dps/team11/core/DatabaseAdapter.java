@@ -126,10 +126,6 @@ public class DatabaseAdapter implements Managed {
 		}
 	}
 	
-	public void clear() throws DatabaseException {
-		env.truncateDatabase(null, "store", false);
-	}
-	
 	/**
 	 * Iterates all keys in the database
 	 * @throws DatabaseException 

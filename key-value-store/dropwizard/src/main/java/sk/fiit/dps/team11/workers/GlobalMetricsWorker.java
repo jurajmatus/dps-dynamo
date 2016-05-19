@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 
 import sk.fiit.dps.team11.core.DatabaseAdapter;
@@ -32,9 +31,7 @@ public class GlobalMetricsWorker {
 	}
 	
 	private void tick() {
-		// Number of database entries
-		Counter dbCounter = metrics.get(MetricRegistry::counter, "database-num-entries");
-		dbCounter.inc(db.numEntries() - dbCounter.getCount());
+		metrics.get(MetricRegistry::histogram, "database-num-entries").update(db.numEntries());
 	}
 	
 }
