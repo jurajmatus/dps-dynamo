@@ -126,6 +126,18 @@ public class DatabaseAdapter implements Managed {
 		}
 	}
 	
+	public void clear() throws DatabaseException {
+		DatabaseEntry _key = new DatabaseEntry();
+		forEach((key, val) -> {
+			_key.setData(key);
+			try {
+				getStore().delete(null, _key);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+	
 	/**
 	 * Iterates all keys in the database
 	 * @throws DatabaseException 
@@ -153,5 +165,5 @@ public class DatabaseAdapter implements Managed {
 			}
 		}
 	}
-
+	
 }

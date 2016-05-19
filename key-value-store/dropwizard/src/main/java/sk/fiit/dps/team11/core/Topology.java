@@ -5,10 +5,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -19,6 +17,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -280,7 +279,6 @@ public class Topology {
 					if (responseJson.isArray()) {
 						responseJson.forEach(node -> {
 							JsonNode service = node.get("Service");
-							JsonNode hostname = service.get("ID");
 							
 							JsonNode ipAddr = service.get("Address");
 							JsonNode position = service.get("Tags").get(0);
@@ -588,6 +586,10 @@ public class Topology {
 		LOGGER.info("Consul register: 'http://{}:8081/healthcheck'.", this.hostname);
 		consulClient.agentServiceRegister(newService);
 		
+	}
+	
+	public Stream<DynamoNode> allNodes() {
+		return nodes.stream();
 	}
 	
 	public void printDynamoNodesToLogger() {
