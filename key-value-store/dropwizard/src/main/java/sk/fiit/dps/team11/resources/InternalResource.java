@@ -47,14 +47,20 @@ public class InternalResource {
 		
 		return topology.allNodes()
 			.filter(node -> !node.equals(topology.self()))
-			.map(node -> new Pair<>(node.getIp(),
-				ClientBuilder.newClient()
-					.property(ClientProperties.CONNECT_TIMEOUT, 1000)
-					.property(ClientProperties.READ_TIMEOUT, 1000)
-					.target(String.format(urlTpl, node.getIp()))
-					.request()
-					.get()
-					.readEntity(expectedClass)));
+			.map(node -> {
+				try {
+					return new Pair<>(node.getIp(),
+						ClientBuilder.newClient()
+							.property(ClientProperties.CONNECT_TIMEOUT, 1000)
+							.property(ClientProperties.READ_TIMEOUT, 1000)
+							.target(String.format(urlTpl, node.getIp()))
+							.request()
+							.get()
+							.readEntity(expectedClass));
+				} catch (Exception e) {
+					return null;
+				}
+			}).filter(pair -> pair != null);
 	}
 	
 	@GET
