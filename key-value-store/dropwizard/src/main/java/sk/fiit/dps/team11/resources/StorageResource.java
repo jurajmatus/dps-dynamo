@@ -15,12 +15,12 @@ import javax.ws.rs.core.MediaType;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
-import com.codahale.metrics.annotation.Timed;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
 
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.GetRequestState;
+import sk.fiit.dps.team11.core.MetricsAdapter;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
 import sk.fiit.dps.team11.core.Topology;
@@ -43,7 +43,7 @@ public class StorageResource {
 	Topology topology;
 	
 	@Inject
-	MetricRegistry metrics;
+	MetricsAdapter metrics;
 	
 	@MQSender(topic = "put")
 	private ActiveMQSender putWorker;
@@ -59,8 +59,7 @@ public class StorageResource {
 	
 	private <T extends BaseRequest, U extends RequestState<T>> void base(U state, Consumer<U> stateHandler) {
 		
-		Timer timer = metrics.timer(
-			MetricRegistry.name(StorageResource.class, state.getRequest().getLabel(), topology.self().getIp()));
+		Timer timer = metrics.get(MetricRegistry::timer, state.getRequest().getLabel());
 		Context time = timer.time();
 		
 		StorageExecutor storageExecutor = StorageExecutor.create(injectManager, state.getRequest());
@@ -77,7 +76,6 @@ public class StorageResource {
 	
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Timed(name = "GET")
 	public void doGet(@Suspended AsyncResponse response,
 			@javax.ws.rs.core.Context HttpServletRequest servletRequest,
 			GetRequest request) {
@@ -94,7 +92,6 @@ public class StorageResource {
 	
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
-	@Timed(name = "PUT")
 	public void doPut(@Suspended AsyncResponse response,
 		@javax.ws.rs.core.Context HttpServletRequest servletRequest,
 		PutRequest request) {

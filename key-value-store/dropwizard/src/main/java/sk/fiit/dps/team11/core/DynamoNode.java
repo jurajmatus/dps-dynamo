@@ -1,15 +1,8 @@
 package sk.fiit.dps.team11.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import sk.fiit.dps.team11.resources.StorageExecutor;
-
 public class DynamoNode implements Comparable<DynamoNode> {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(StorageExecutor.class);
 
 	private final String ip;
 	

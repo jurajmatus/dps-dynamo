@@ -1,12 +1,5 @@
 package sk.fiit.dps.team11;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -23,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheck;
-import com.google.common.net.InetAddresses;
 import com.kjetland.dropwizard.activemq.ActiveMQBundle;
 
 import io.dropwizard.Application;
@@ -34,8 +26,8 @@ import io.dropwizard.setup.Environment;
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
-import sk.fiit.dps.team11.core.DynamoNode;
 import sk.fiit.dps.team11.core.MQ;
+import sk.fiit.dps.team11.core.MetricsAdapter;
 import sk.fiit.dps.team11.core.NetworkInterfaceUtility;
 import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.core.Topology;
@@ -131,6 +123,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 				bind(Topology.class).to(Topology.class).in(Singleton.class);
 				bind(injectManager).to(InjectManager.class);
 				bind(VersionResolution.class).to(VersionResolution.class).in(Singleton.class);
+				bind(MetricsAdapter.class).to(MetricsAdapter.class).in(Singleton.class);
 				
 				bind(ActiveMQSenderFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 				bind(ActiveMQSenderFactoryProvider.InjectionResolver.class)

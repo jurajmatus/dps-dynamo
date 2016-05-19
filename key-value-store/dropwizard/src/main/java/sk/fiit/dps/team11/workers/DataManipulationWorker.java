@@ -3,7 +3,6 @@ package sk.fiit.dps.team11.workers;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.BiFunction;
 
 import javax.inject.Inject;
 
@@ -17,6 +16,7 @@ import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.core.DatabaseAdapter;
 import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.MQ;
+import sk.fiit.dps.team11.core.MetricsAdapter;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestStates;
 import sk.fiit.dps.team11.core.Topology;
@@ -55,18 +55,14 @@ public class DataManipulationWorker {
 	private ActiveMQSender replicaFinderWorker;
 	
 	@Inject
-	private MetricRegistry metrics;
-	
-	private <T> T m(BiFunction<MetricRegistry, String, T> getter, String name) {
-		return getter.apply(metrics, MetricRegistry.name(DataManipulationWorker.class, name));
-	}
+	private MetricsAdapter metrics;
 
 	@MQListener(queue = "put")
 	public void receiveLocalPut(UUID requestId) {
 		
 		states.withState(requestId, PutRequestState.class, s -> {
 			
-			m(MetricRegistry::meter, "coordinator-put").mark();
+			metrics.get(MetricRegistry::meter, "coordinator-put").mark();
 			
 			PutRequest req = s.getRequest();
 
@@ -83,16 +79,16 @@ public class DataManipulationWorker {
 				
 				if (success) {				
 					s.acknowledgeForSelf(success);
-					m(MetricRegistry::meter, "optimistic-put-success").mark();
+					metrics.get(MetricRegistry::meter, "optimistic-put-success").mark();
 				} else {
 					execService.execute(() -> receiveLocalPut(requestId));
-					m(MetricRegistry::meter, "optimistic-put-failure").mark();
+					metrics.get(MetricRegistry::meter, "optimistic-put-failure").mark();
 				}
 				
 			}, isValueCurrent -> {
 				s.respondNow(isValueCurrent);
 				if (!isValueCurrent) {
-					m(MetricRegistry::meter, "old-version-put-failure").mark();
+					metrics.get(MetricRegistry::meter, "old-version-put-failure").mark();
 				}
 			});
 			
@@ -109,7 +105,7 @@ public class DataManipulationWorker {
 		
 		versionResolution.resolve(oldValue, newValue, false, valueToWrite -> {
 			
-			m(MetricRegistry::meter, "replica-put").mark();
+			metrics.get(MetricRegistry::meter, "replica-put").mark();
 			
 			boolean success = db.put(putMessage.getKey().data, valueToWrite, oldValue);
 			mq.send(putMessage.getFrom(), "put-ack", new RemotePutAcknowledgement(
@@ -117,7 +113,7 @@ public class DataManipulationWorker {
 			
 		}, isValueCurrent -> {
 			
-			m(MetricRegistry::meter, "replica-put").mark();
+			metrics.get(MetricRegistry::meter, "replica-put").mark();
 			
 			mq.send(putMessage.getFrom(), "put-ack", new RemotePutAcknowledgement(
 				topology.self().getIp(), putMessage.getRequestId(), isValueCurrent));
@@ -130,7 +126,7 @@ public class DataManipulationWorker {
 		
 		states.withState(putAck.getRequestId(), PutRequestState.class, s -> {
 			
-			m(MetricRegistry::meter, "put-ack").mark();
+			metrics.get(MetricRegistry::meter, "put-ack").mark();
 			
 			s.acknowledgeForNode(topology.nodeForIp(putAck.getFrom()), putAck.isSuccess());
 			
@@ -143,7 +139,7 @@ public class DataManipulationWorker {
 		
 		states.withState(requestId, GetRequestState.class, s -> {
 			
-			m(MetricRegistry::meter, "coordinator-get").mark();
+			metrics.get(MetricRegistry::meter, "coordinator-get").mark();
 			
 			VersionedValue value = db.get(s.getRequest().getKey());
 			s.putDataForSelf(value);
@@ -155,7 +151,7 @@ public class DataManipulationWorker {
 	@MQListener(queue = "get-replica")
 	public void receiveRemoveGet(RemoteGetMessage getMessage) {
 		
-		m(MetricRegistry::meter, "replica-get").mark();
+		metrics.get(MetricRegistry::meter, "replica-get").mark();
 		
 		VersionedValue value = db.get(getMessage.getKey().data);
 		
@@ -169,7 +165,7 @@ public class DataManipulationWorker {
 		
 		states.withState(getAck.getRequestId(), GetRequestState.class, s -> {
 			
-			m(MetricRegistry::meter, "get-ack").mark();
+			metrics.get(MetricRegistry::meter, "get-ack").mark();
 			
 			s.putDataForNode(topology.nodeForIp(getAck.getFrom()), getAck.getValue());
 			
