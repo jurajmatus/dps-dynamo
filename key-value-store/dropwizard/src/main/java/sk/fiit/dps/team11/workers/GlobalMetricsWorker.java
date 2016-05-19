@@ -31,7 +31,7 @@ public class GlobalMetricsWorker {
 	}
 	
 	private void tick() {
-		metrics.get(MetricRegistry::histogram, "database-num-entries").update(db.numEntries());
+		metrics.get(MetricRegistry::meter, "database-num-entries").mark(db.numEntries());
 	}
 	
 }

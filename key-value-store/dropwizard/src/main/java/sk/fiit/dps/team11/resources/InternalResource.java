@@ -74,7 +74,7 @@ public class InternalResource {
 			db.forEach((key, val) -> {
 				all.put(Base64.encodeBase64String(key), val);
 			});
-			return MAPPER.writeValueAsString(all);
+			return "Count: " + all.size() + "\n" + MAPPER.writeValueAsString(all);
 		} catch (Exception e) {
 			return e.toString();
 		}
