@@ -1,7 +1,6 @@
 package sk.fiit.dps.team11.resources;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -102,7 +101,7 @@ public class StorageExecutor {
 			.target(url).request();
 		Invocation invocation;
 		
-		if (input instanceof ObjectNode && !servletRequest.getMethod().equalsIgnoreCase("GET")) {
+		if (input instanceof ObjectNode) {
 			invocation = requestBuilder.build(servletRequest.getMethod(), Entity.entity(input, MediaType.APPLICATION_JSON));
 		} else {
 			invocation = requestBuilder.build(servletRequest.getMethod());
@@ -130,7 +129,7 @@ public class StorageExecutor {
 	
 	public void execute(RequestState<? extends BaseRequest> state, Runnable handler) {
 		
-		LOGGER.info("Received GET request with id {}", state.getRequestId());
+		LOGGER.info("Received {} request with id {}", state.getRequest().getLabel(), state.getRequestId());
 		
 		AsyncResponse response = request.getResponse();
 		response.setTimeout(conf.getReliability().getResponseTimeoutMillis(), TimeUnit.MILLISECONDS);

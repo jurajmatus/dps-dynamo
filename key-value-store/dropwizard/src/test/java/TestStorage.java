@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Stream;
 
 import javax.ws.rs.client.ClientBuilder;
@@ -31,14 +32,15 @@ import static java.util.stream.Collectors.toList;
 import sk.fiit.dps.team11.core.Version;
 import sk.fiit.dps.team11.core.Version.Comp;
 import sk.fiit.dps.team11.models.ByteArray;
+import sk.fiit.dps.team11.models.GetRequest;
 import sk.fiit.dps.team11.models.GetResponse;
 import sk.fiit.dps.team11.models.PutRequest;
 import sk.fiit.dps.team11.models.PutResponse;
 
 public class TestStorage {
 	
-	private static final String URL = "http://localhost:8080/";
-	// private static final String URL = "http://10.32.0.2:8080/";
+	// private static final String URL = "http://localhost:8080/";
+	private static final String URL = "http://10.32.0.2:8080/";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestStorage.class);
 	
@@ -80,7 +82,9 @@ public class TestStorage {
 	}
 	
 	private PutResponse put(PutRequest request) throws Exception {
-		Response response = target.request().buildPut(Entity.entity(request, MediaType.APPLICATION_JSON)).invoke();
+		Response response = target.request()
+				.buildPut(Entity.entity(request, MediaType.APPLICATION_JSON))
+				.invoke();
 		
 		PutResponse resp = response.readEntity(PutResponse.class);
 		
@@ -88,11 +92,11 @@ public class TestStorage {
 	}
 	
 	private GetResponse get(byte[] key) throws Exception {
-		Response response = target
-			.path(Base64.encodeBase64String(key))
-			.queryParam("minNumWrites", MIN_NUM_RW)
-			.request()
-			.get();
+		GetRequest request = new GetRequest(Base64.encodeBase64String(key), MIN_NUM_RW);
+		
+		Response response = target.request()
+			.buildPost(Entity.entity(request, MediaType.APPLICATION_JSON))
+			.invoke();
 		
 		GetResponse resp = response.readEntity(GetResponse.class);
 		
@@ -150,6 +154,23 @@ public class TestStorage {
 		GetResponse resp = get(key);
 		
 		assertThat(resp.getValue().getValues(), equalTo(Arrays.asList(new ByteArray(value))));
+		
+	}
+
+	@Test
+	public void testPut10Values() throws Exception {
+		
+		Random r = new Random();
+		
+		for (int i = 0; i < 10; i++) {
+			byte[] key = new byte[10];
+			r.nextBytes(key);
+			
+			byte[] value = new byte[25];
+			r.nextBytes(value);
+			
+			put(new PutRequest(key, value, Version.INITIAL, MIN_NUM_RW));
+		}
 		
 	}
 

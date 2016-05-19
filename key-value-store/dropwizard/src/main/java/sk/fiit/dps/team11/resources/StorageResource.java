@@ -4,8 +4,7 @@ import java.util.function.Consumer;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -13,23 +12,14 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.gson.JsonArray;
 import com.kjetland.dropwizard.activemq.ActiveMQSender;
-import com.sleepycat.je.DatabaseException;
 
 import sk.fiit.dps.team11.annotations.MQSender;
 import sk.fiit.dps.team11.config.TopConfiguration;
-import sk.fiit.dps.team11.core.DatabaseAdapter;
 import sk.fiit.dps.team11.core.GetRequestState;
 import sk.fiit.dps.team11.core.PutRequestState;
 import sk.fiit.dps.team11.core.RequestState;
@@ -85,11 +75,15 @@ public class StorageResource {
 		return conf.getReliability().getNumReplicas();
 	}
 	
-	@GET
+	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Timed(name = "GET")
-	@Path("{key}")
-	public void doGet(@Suspended AsyncResponse response, @BeanParam GetRequest request) {
+	public void doGet(@Suspended AsyncResponse response,
+			@javax.ws.rs.core.Context HttpServletRequest servletRequest,
+			GetRequest request) {
+		
+		request.setResponse(response);
+		request.setServletRequest(servletRequest);
 		
 		base(new GetRequestState(response, numReplicas(), request, versionResolution), s -> {
 			replicaFinderWorker.send(s.getRequestId());
@@ -98,46 +92,12 @@ public class StorageResource {
 		
 	}
 	
-	
-	@Inject
-	private DatabaseAdapter db;
-	
-	private static final Logger LOGGER = LoggerFactory.getLogger(StorageResource.class);
-	
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Timed(name = "GET")
-	@Path("get_all_data")
-	public void printAllDataToLogger() {
-		
-		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode array = mapper.createArrayNode();
-		
-		try {
-			db.forEach( (key, value) -> {
-				if ( value.getValues().size() > 0 ) {
-					array.add(mapper.createArrayNode().
-							add(key).
-							add(value.getValues().get(value.getValues().size() -1 ).data));
-				}
-			});
-		} catch (DatabaseException e) {
-			LOGGER.error("", e);
-		}
-		
-		try {
-			LOGGER.info(mapper.writeValueAsString(array));
-		} catch (JsonProcessingException e) {
-			LOGGER.error("", e);
-		}
-		
-	}
-	
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@Timed(name = "PUT")
 	public void doPut(@Suspended AsyncResponse response,
-		@javax.ws.rs.core.Context HttpServletRequest servletRequest, PutRequest request) {
+		@javax.ws.rs.core.Context HttpServletRequest servletRequest,
+		PutRequest request) {
 		
 		request.setResponse(response);
 		request.setServletRequest(servletRequest);

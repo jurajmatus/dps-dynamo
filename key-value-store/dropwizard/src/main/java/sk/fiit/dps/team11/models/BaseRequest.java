@@ -17,7 +17,7 @@ abstract public class BaseRequest {
 		this.key = key;
 	}
 
-	protected void setResponse(AsyncResponse response) {
+	public void setResponse(AsyncResponse response) {
 		this.response = response;
 	}
 
@@ -26,7 +26,7 @@ abstract public class BaseRequest {
 		return response;
 	}
 
-	protected void setServletRequest(HttpServletRequest servletRequest) {
+	public void setServletRequest(HttpServletRequest servletRequest) {
 		this.servletRequest = servletRequest;
 	}
 

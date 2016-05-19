@@ -58,14 +58,4 @@ public class PutRequest extends BaseRequest {
 		return minNumWrites;
 	}
 	
-	@Override
-	public void setResponse(AsyncResponse response) {
-		super.setResponse(response);
-	}
-	
-	@Override
-	public void setServletRequest(HttpServletRequest servletRequest) {
-		super.setServletRequest(servletRequest);
-	}
-	
 }
