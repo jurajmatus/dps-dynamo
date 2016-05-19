@@ -101,19 +101,16 @@ public class TestHelperCalls {
 	}
 
 	@Test
-	public void testPut10Values() throws Exception {
+	public void testRandomPut() throws Exception {
 		
 		Random r = new Random();
+		byte[] key = new byte[10];
+		r.nextBytes(key);
 		
-		for (int i = 0; i < 10; i++) {
-			byte[] key = new byte[10];
-			r.nextBytes(key);
-			
-			byte[] value = new byte[25];
-			r.nextBytes(value);
-			
-			put(new PutRequest(key, value, Version.INITIAL, MIN_NUM_RW));
-		}
+		byte[] value = new byte[25];
+		r.nextBytes(value);
+		
+		put(new PutRequest(key, value, Version.INITIAL, MIN_NUM_RW));
 		
 	}
 	
