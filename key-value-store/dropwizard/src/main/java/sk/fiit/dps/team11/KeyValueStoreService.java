@@ -36,6 +36,7 @@ import sk.fiit.dps.team11.providers.ActiveMQSenderFactoryProvider;
 import sk.fiit.dps.team11.providers.InjectManager;
 import sk.fiit.dps.team11.providers.RuntimeExceptionMapper;
 import sk.fiit.dps.team11.resources.CheckConnectivityResource;
+import sk.fiit.dps.team11.resources.InternalResource;
 import sk.fiit.dps.team11.resources.PingResource;
 import sk.fiit.dps.team11.resources.StorageResource;
 import sk.fiit.dps.team11.workers.DataManipulationWorker;
@@ -136,6 +137,7 @@ public class KeyValueStoreService extends Application<TopConfiguration> {
 
 		// Resources
 		environment.jersey().register(StorageResource.class);
+		environment.jersey().register(InternalResource.class);
 		environment.jersey().register(PingResource.class);
 		environment.jersey().register(CheckConnectivityResource.class);
 		
